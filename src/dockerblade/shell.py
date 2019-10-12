@@ -34,5 +34,5 @@ class Shell:
         Tuple[int, str, float]
             The return code, output, and wall-clock running time of the
             execution, measured in seconds.
-        """ 
+        """
         raise NotImplementedError
