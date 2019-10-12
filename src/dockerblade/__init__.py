@@ -2,3 +2,4 @@
 from . import exceptions
 from .files import FileSystem
 from .shell import Shell, ShellFactory
+from .stopwatch import Stopwatch
