@@ -97,7 +97,7 @@ class ShellFactory:
         """
         logger.debug("building shell [%s] for container [%s]", path, name)
         container = self._docker_client.containers.get(name)
-        shell = Shell(name=name,
+        shell = Shell(container_name=name,
                       path=path,
                       container=container,
                       docker_api=self._docker_api)
