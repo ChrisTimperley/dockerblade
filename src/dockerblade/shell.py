@@ -8,14 +8,10 @@ import docker
 
 
 class Shell:
-    """Provides shell access to a Docker container."""
-    @staticmethod
-    def for_container(name_or_uid: str) -> 'Shell':
-        # get low-level API
-        # get Docker client
-        # determine container PID
-        raise NotImplementedError
-
+    """Provides shell access to a Docker container.
+    Do not directly call the constructor to create shells. Instead, you
+    should use a :class:`ShellFactory` to build shells.
+    """
     def environ(self, var: str) -> str:
         """Reads the value of a given environment variable inside this shell.
 
