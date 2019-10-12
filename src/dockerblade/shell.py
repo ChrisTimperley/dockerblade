@@ -52,7 +52,7 @@ class Shell:
 @attr.s(slots=True, frozen=True)
 class ShellFactory:
     """Used to construct shells.
-    
+   
     Attributes
     ----------
     docker_url: str
