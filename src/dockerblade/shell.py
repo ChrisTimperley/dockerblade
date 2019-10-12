@@ -3,6 +3,7 @@ __all__ = ('Shell', 'ShellFactory')
 
 from typing import Tuple
 
+from loguru import logger
 import attr
 import docker
 
@@ -60,8 +61,8 @@ class ShellFactory:
     def __attrs_post_init__(self) -> None:
         docker_api = docker.APIClient(self.docker_url)
         docker_client = docker.Client(self.docker_url)
-        object.__init__(self, '_docker_api', docker_api)
-        object.__init__(self, '_docker_client', docker_api)
+        object.__setattr__(self, '_docker_api', docker_api)
+        object.__setattr__(self, '_docker_client', docker_api)
 
     def __enter__(self) -> 'ShellFactory':
         return self
@@ -70,12 +71,14 @@ class ShellFactory:
         self.close()
 
     def close(self) -> None:
+        logger.debug("closing shell factory: %s", self)
         self._docker_api.close()
         self._docker_client.close()
+        logger.debug("closed shell factory: %s", self)
 
     def build(self,
               name: str,
-              shell: str = '/bin/bash'
+              path: str = '/bin/bash'
               ) -> 'Shell':
         """Constructs a shell for a given Docker container.
 
@@ -83,7 +86,7 @@ class ShellFactory:
         ----------
         name: str
             The name or ID of the Docker container.
-        shell: str
+        path: str
             The absolute path to the shell inside that container that should
             be used (e.g., :code:`/bin/bash`).
 
@@ -92,8 +95,11 @@ class ShellFactory:
         Shell
             A shell for the given container.
         """
+        logger.debug("building shell [%s] for container [%s]", path, name)
         container = self._docker_client.containers.get(name)
-        return Shell(name=name,
-                     path=shell,
-                     container=container,
-                     docker_api=self._docker_api)
+        shell = Shell(name=name,
+                      path=path,
+                      container=container,
+                      docker_api=self._docker_api)
+        logger.debug("built shell for container: %s", shell)
+        return shell
