@@ -14,7 +14,7 @@ from .stopwatch import Stopwatch
 T = TypeVar('T', str, bytes)
 
 
-@attr.s(slots=True, auto_attribs=True, frozen=True)
+@attr.s(auto_attribs=True, frozen=True)
 class CompletedProcess(Generic[T]):
     """Stores the result of a completed process.
 
