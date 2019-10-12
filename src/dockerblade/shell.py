@@ -47,6 +47,12 @@ class ShellFactory:
     _docker_client: docker.Client = \
         attr.ib(init=False, repr=False, cmp=False)
 
+    def __enter__(self) -> 'ShellFactory':
+        return self
+
+    def __exit__(self, ex_type, ex_val, ex_tb) -> None:
+        self.close()
+
     def close(self) -> None:
         self._docker_api.close()
         self._docker_client.close()
