@@ -4,6 +4,7 @@ __all__ = ('Shell', 'ShellFactory')
 from typing import Tuple
 
 from loguru import logger
+from docker.models.containers import Container as DockerContainer
 import attr
 import docker
 
@@ -24,7 +25,7 @@ class Shell:
     """
     container_name: str = attr.ib()
     path: str = attr.ib()
-    _container: docker.Container = attr.ib(repr=False)
+    _container: DockerContainer = attr.ib(repr=False)
     _docker_api: docker.APIClient = attr.ib(repr=False)
 
     def environ(self, var: str) -> str:
@@ -61,7 +62,7 @@ class ShellFactory:
     docker_url: str = attr.ib(default='unix://var/run/docker.sock')
     _docker_api: docker.APIClient = \
         attr.ib(init=False, repr=False, cmp=False)
-    _docker_client: docker.Client = \
+    _docker_client: docker.DockerClient = \
         attr.ib(init=False, repr=False, cmp=False)
 
     def __attrs_post_init__(self) -> None:
