@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-__all__ = ('Shell', 'ShellFactory')
+__all__ = ('Shell', 'ShellFactory', 'CompletedProcess')
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Generic, TypeVar
 import shlex
 
 from loguru import logger
@@ -10,6 +10,26 @@ import attr
 import docker
 
 from .stopwatch import Stopwatch
+
+T = TypeVar('T', str, bytes)
+
+
+@attr.s(slots=True, auto_attribs=True)
+class CompletedProcess(Generic[T]):
+    """Stores the result of a completed process.
+
+    Attributes
+    ----------
+    args: str
+        The arguments that were used to launch the process.
+    returncode: int
+        The returncode that was produced by the process.
+    output: T, optional
+        The output, if any, that was produced by the process.
+    """
+    args: str
+    returncode: int
+    output: Optional[T]
 
 
 @attr.s(eq=False, hash=False)
