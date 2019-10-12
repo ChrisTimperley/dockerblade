@@ -92,5 +92,8 @@ class ShellFactory:
         Shell
             A shell for the given container.
         """
-        # f
-        raise NotImplementedError
+        container = self._docker_client.containers.get(name)
+        return Shell(name=name,
+                     path=shell,
+                     container=container,
+                     docker_api=self._docker_api)
