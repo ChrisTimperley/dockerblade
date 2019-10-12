@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__all__ = ('Shell',)
+__all__ = ('Shell', 'ShellFactory')
 
 from typing import Tuple
 
@@ -34,5 +34,29 @@ class Shell:
         Tuple[int, str, float]
             The return code, output, and wall-clock running time of the
             execution, measured in seconds.
+        """
+        raise NotImplementedError
+
+
+class ShellFactory:
+    """Used to construct shells."""
+    def build(self,
+              name: str,
+              shell: str = '/bin/bash'
+              ) -> 'Shell':
+        """Constructs a shell for a given Docker container.
+
+        Parameters
+        ----------
+        name: str
+            The name or ID of the Docker container.
+        shell: str
+            The absolute path to the shell inside that container that should
+            be used (e.g., :code:`/bin/bash`).
+
+        Returns
+        -------
+        Shell
+            A shell for the given container.
         """
         raise NotImplementedError
