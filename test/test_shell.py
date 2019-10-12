@@ -13,7 +13,7 @@ def alpine_310():
         docker_client = docker.DockerClient()
         exit_stack.callback(docker_client.close)
 
-        container = docker_client.containers.run("alpine:3.10", '/bin/sh', detach=True)
+        container = docker_client.containers.run('alpine:3.10', stdin_open=True, detach=True)
         exit_stack.callback(container.remove, force=True)
         yield container
 
