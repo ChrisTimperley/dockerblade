@@ -7,11 +7,25 @@ import attr
 import docker
 
 
+@attr.s(cmp=False)
 class Shell:
     """Provides shell access to a Docker container.
     Do not directly call the constructor to create shells. Instead, you
     should use a :class:`ShellFactory` to build shells.
+
+    Attributes
+    ----------
+    container_name: str
+        The name of the container to which the shell is attached.
+    path: str
+        The absolute path to the binary (inside the container) that should be
+        used to provide this shell.
     """
+    container_name: str = attr.ib()
+    path: str = attr.ib()
+    _container: docker.Container = attr.ib(repr=False)
+    _docker_api: docker.APIClient = attr.ib(repr=False)
+
     def environ(self, var: str) -> str:
         """Reads the value of a given environment variable inside this shell.
 
@@ -78,4 +92,5 @@ class ShellFactory:
         Shell
             A shell for the given container.
         """
+        # f
         raise NotImplementedError
