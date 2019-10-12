@@ -47,6 +47,10 @@ class ShellFactory:
     _docker_client: docker.Client = \
         attr.ib(init=False, repr=False, cmp=False)
 
+    def close(self) -> None:
+        self._docker_api.close()
+        self._docker_client.close()
+
     def build(self,
               name: str,
               shell: str = '/bin/bash'
