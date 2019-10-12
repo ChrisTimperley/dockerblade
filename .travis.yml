@@ -7,5 +7,6 @@ install:
 script:
 - pycodestyle --show-source src
 - mypy src --ignore-missing-imports
+- pytest
 notifications:
   email: false
