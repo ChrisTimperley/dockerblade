@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import attr
+import attr as _attr
 
 
 class DockerBladeException:
