@@ -51,7 +51,13 @@ class Shell:
 
 @attr.s(slots=True, frozen=True)
 class ShellFactory:
-    """Used to construct shells."""
+    """Used to construct shells.
+    
+    Attributes
+    ----------
+    docker_url: str
+        The URL of the associated Docker engine.
+    """
     docker_url: str = attr.ib(default='unix://var/run/docker.sock')
     _docker_api: docker.APIClient = \
         attr.ib(init=False, repr=False, cmp=False)
