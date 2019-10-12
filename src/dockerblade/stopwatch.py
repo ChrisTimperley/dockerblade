@@ -7,7 +7,7 @@ import warnings
 import attr
 
 
-@attr.s(eq=True)
+@attr.s(slots=True, repr=False)
 class Stopwatch:
     """Used to record the duration of events.
 
@@ -21,6 +21,9 @@ class Stopwatch:
     _offset: float = attr.ib(default=0.0)
     _paused: bool = attr.ib(default=True)
     _time_start: float = attr.ib(default=0.0)
+
+    def __repr__(self) -> str:
+        return f'Stopwatch(paused={self._paused}, duration={self.duration})'
 
     def stop(self) -> None:
         """Freezes the stopwatch."""
