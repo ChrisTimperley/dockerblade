@@ -34,14 +34,20 @@ class Shell:
         raise NotImplementedError
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, frozen=True)
 class ShellFactory:
     """Used to construct shells."""
-    docker_url: str = attr.ib()
+    docker_url: str = attr.ib(default='unix://var/run/docker.sock')
     _docker_api: docker.APIClient = \
         attr.ib(init=False, repr=False, cmp=False)
     _docker_client: docker.Client = \
         attr.ib(init=False, repr=False, cmp=False)
+
+    def __attrs_post_init__(self) -> None:
+        docker_api = docker.APIClient(self.docker_url)
+        docker_client = docker.Client(self.docker_url)
+        object.__init__(self, '_docker_api', docker_api)
+        object.__init__(self, '_docker_client', docker_api)
 
     def __enter__(self) -> 'ShellFactory':
         return self
