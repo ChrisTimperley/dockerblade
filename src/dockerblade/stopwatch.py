@@ -22,6 +22,13 @@ class Stopwatch:
     _paused: bool = attr.ib(default=True)
     _time_start: float = attr.ib(default=0.0)
 
+    def __enter__(self) -> 'Stopwatch':
+        self.start()
+        return self
+
+    def __exit__(self, ex_type, ex_val, ex_tb) -> None:
+        self.stop()
+
     def __repr__(self) -> str:
         return f'Stopwatch(paused={self._paused}, duration={self.duration})'
 
