@@ -69,7 +69,7 @@ class ShellFactory:
         docker_api = docker.APIClient(self.docker_url)
         docker_client = docker.DockerClient(self.docker_url)
         object.__setattr__(self, '_docker_api', docker_api)
-        object.__setattr__(self, '_docker_client', docker_api)
+        object.__setattr__(self, '_docker_client', docker_client)
 
     def __enter__(self) -> 'ShellFactory':
         return self
