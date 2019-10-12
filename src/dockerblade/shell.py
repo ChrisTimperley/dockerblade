@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 __all__ = ('Shell', 'ShellFactory')
 
-from typing import Tuple
+from typing import Tuple, Optional
+import shlex
 
 from loguru import logger
 from docker.models.containers import Container as DockerContainer
@@ -30,6 +31,23 @@ class Shell:
     _container: DockerContainer = attr.ib(repr=False)
     _docker_api: docker.APIClient = attr.ib(repr=False)
 
+    def _instrument(self,
+                    command: str,
+                    time_limit: Optional[int] = None,
+                    kill_after: int = 1,
+                    identifier: Optional[str] = None
+                    ) -> str:
+        q = shlex.quote
+        logger.debug(f"instrumenting command: {command}")
+        if identifier:
+            command = f'echo {q(identifier)} > /dev/null && {command}'
+        command = f'{self.path} -c {q(command)}'
+        if time_limit:
+            command = (f'timeout --kill-after={kill_after} '
+                       f'--signal=SIGTERM {time_limit} {command}')
+        logger.debug(f"instrumented command: {command}")
+        return command
+
     def environ(self, var: str) -> str:
         """Reads the value of a given environment variable inside this shell.
 
@@ -55,10 +73,11 @@ class Shell:
         """
         logger.debug(f"executing command: {command}")
         container = self._container
+        command_instrumented = self._instrument(command)
 
         with Stopwatch() as timer:
             retcode, output = container.exec_run(
-                command,
+                command_instrumented,
                 workdir=context)
 
         duration = timer.duration
