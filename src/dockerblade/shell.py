@@ -24,11 +24,14 @@ class CompletedProcess(Generic[T]):
         The arguments that were used to launch the process.
     returncode: int
         The returncode that was produced by the process.
+    duration: float
+        The number of seconds taken to complete the process.
     output: T, optional
         The output, if any, that was produced by the process.
     """
     args: str
     returncode: int
+    duration: float
     output: Optional[T]
 
 
@@ -78,36 +81,34 @@ class Shell:
         """
         raise NotImplementedError
 
-    def execute(self,
-                command: str,
-                *,
-                context: str = '/'
-                ) -> Tuple[int, str, float]:
+    def run(self,
+            args: str,
+            *,
+            context: str = '/'
+            ) -> CompletedProcess:
         """Executes a given command and blocks until its completion.
 
         Returns
         -------
-        Tuple[int, str, float]
-            The return code, output, and wall-clock running time of the
-            execution, measured in seconds.
+        CompletedProcess
+            A summary of the outcome of the command execution.
         """
-        logger.debug(f"executing command: {command}")
+        logger.debug(f"executing command: {args}")
         container = self._container
-        command_instrumented = self._instrument(command)
+        args_instrumented = self._instrument(args)
 
         with Stopwatch() as timer:
             retcode, output = container.exec_run(
-                command_instrumented,
+                args_instrumented,
                 workdir=context)
 
-        duration = timer.duration
         output = output.decode('utf-8').rstrip('\n')
-        logger.debug("executed command [{command}] "
-                     "(retcode: {retcode}; time: {time:.3f} s)"
-                     "\n{output}",
-                     command=command, retcode=retcode, time=duration,
-                     output=output)
-        return retcode, output, duration
+        result = CompletedProcess(args=args,
+                                  returncode=retcode,
+                                  duration=timer.duration,
+                                  output=output)
+        logger.debug(f"executed command: {result}")
+        return result
 
 
 @attr.s(slots=True, frozen=True)

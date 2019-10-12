@@ -26,6 +26,6 @@ def shell_factory():
 
 def test_hello_world(alpine_310, shell_factory):
     shell = shell_factory.build(alpine_310.id, '/bin/sh')
-    retcode, output, duration = shell.execute("echo 'hello world'")
-    assert retcode == 0
-    assert output == 'hello world'
+    result = shell.run("echo 'hello world'")
+    assert result.returncode == 0
+    assert result.output == 'hello world'
