@@ -1,2 +1,2 @@
 # -*- coding: utf-8 -*-
-from .files import Files
+from .files import FileSystem
