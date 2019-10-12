@@ -7,7 +7,7 @@ import warnings
 import attr
 
 
-@attr.s(slots=True, repr=False, str=False, cmp=False)
+@attr.s(slots=True, repr=False, str=False, eq=False, hash=False)
 class Stopwatch:
     """Used to record the duration of events.
 
