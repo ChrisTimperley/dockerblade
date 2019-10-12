@@ -38,8 +38,15 @@ class Shell:
         raise NotImplementedError
 
 
+@attr.s(slots=True)
 class ShellFactory:
     """Used to construct shells."""
+    docker_url: str = attr.ib()
+    _docker_api: docker.APIClient = \
+        attr.ib(init=False, repr=False, cmp=False)
+    _docker_client: docker.Client = \
+        attr.ib(init=False, repr=False, cmp=False)
+
     def build(self,
               name: str,
               shell: str = '/bin/bash'
