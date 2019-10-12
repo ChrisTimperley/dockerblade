@@ -8,8 +8,10 @@ from docker.models.containers import Container as DockerContainer
 import attr
 import docker
 
+from .stopwatch import Stopwatch
 
-@attr.s(cmp=False)
+
+@attr.s(eq=False, hash=False)
 class Shell:
     """Provides shell access to a Docker container.
     Do not directly call the constructor to create shells. Instead, you
@@ -38,7 +40,11 @@ class Shell:
         """
         raise NotImplementedError
 
-    def execute(self, command: str) -> Tuple[int, str, float]:
+    def execute(self,
+                command: str,
+                *,
+                context: str = '/'
+                ) -> Tuple[int, str, float]:
         """Executes a given command and blocks until its completion.
 
         Returns
@@ -47,7 +53,22 @@ class Shell:
             The return code, output, and wall-clock running time of the
             execution, measured in seconds.
         """
-        raise NotImplementedError
+        logger.debug(f"executing command: {command}")
+        container = self._container
+
+        with Stopwatch() as timer:
+            retcode, output = container.exec_run(
+                command,
+                workdir=context)
+
+        duration = timer.duration
+        output = output.decode('utf-8').rstrip('\n')
+        logger.debug("executed command [{command}] "
+                     "(retcode: {retcode}; time: {time:.3f} s)"
+                     "\n{output}",
+                     command=command, retcode=retcode, time=duration,
+                     output=output)
+        return retcode, output, duration
 
 
 @attr.s(slots=True, frozen=True)
@@ -61,9 +82,9 @@ class ShellFactory:
     """
     docker_url: str = attr.ib(default='unix://var/run/docker.sock')
     _docker_api: docker.APIClient = \
-        attr.ib(init=False, repr=False, cmp=False)
+        attr.ib(init=False, repr=False, eq=False, hash=False)
     _docker_client: docker.DockerClient = \
-        attr.ib(init=False, repr=False, cmp=False)
+        attr.ib(init=False, repr=False, eq=False, hash=False)
 
     def __attrs_post_init__(self) -> None:
         docker_api = docker.APIClient(self.docker_url)
