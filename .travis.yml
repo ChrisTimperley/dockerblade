@@ -1,0 +1,11 @@
+language: python
+python:
+- '3.6'
+install:
+- pip install -r requirements.dev.txt
+- pip install --upgrade .
+script:
+- pycodestyle --show-source src
+- mypy src --ignore-missing-imports
+notifications:
+  email: false
