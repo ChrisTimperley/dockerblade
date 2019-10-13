@@ -67,7 +67,7 @@ class Shell:
     container_name: str = attr.ib()
     path: str = attr.ib()
     _container: DockerContainer = attr.ib(repr=False)
-    _docker_api: docker.APIClient = attr.ib(repr=False)
+    _docker: DockerDaemon = attr.ib(repr=False)
 
     def _instrument(self,
                     command: str,
@@ -241,7 +241,7 @@ class Shell:
               stdout: bool = True,
               stderr: bool = False
               ) -> Popen:
-        docker_api = self._docker_api
+        docker_api = self._docker.api
         args_instrumented = self._instrument(args)
         exec_response = docker_api.exec_create(self._container.id,
                                                args_instrumented,
@@ -310,6 +310,6 @@ class ShellFactory:
         shell = Shell(container_name=name,
                       path=path,
                       container=container,
-                      docker_api=self.docker.api)
+                      docker=self.docker)
         logger.debug(f"built shell for container: {shell}")
         return shell
