@@ -104,7 +104,7 @@ class Popen:
         pid = self.pid
         container = self._container
         logger.debug(f"sending signal {sig} to process {pid}")
-        cmd = f'kill -{sig} {pid}'
+        cmd = f'kill -{sig} -{pid}'
         if pid:
             container.exec_run(cmd, stdout=False, stderr=False, user='root')
 
