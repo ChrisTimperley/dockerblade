@@ -3,12 +3,14 @@ __all__ = ('Shell', 'ShellFactory', 'CompletedProcess', 'CalledProcessError')
 
 from typing import Tuple, Optional, Generic, TypeVar
 import shlex
+import uuid
 
 from loguru import logger
 from docker.models.containers import Container as DockerContainer
 import attr
 import docker
 
+from .popen import Popen
 from .stopwatch import Stopwatch
 from .exceptions import CalledProcessError
 
@@ -162,6 +164,31 @@ class Shell:
                                   output=output)
         logger.debug(f"executed command: {result}")
         return result
+
+    def popen(self,
+              args: str,
+              *,
+              cwd: str = '/',
+              stdout: bool = True,
+              stderr: bool = False
+              ) -> Popen:
+        uid = str(uuid.uuid4())
+        docker_api = self._docker_api
+        args_instrumented = self._instrument(args, identifier=uid)
+        exec_response = docker_api.exec_create(self._container.id,
+                                               args_instrumented,
+                                               tty=True,
+                                               stdout=stdout,
+                                               stderr=stderr)
+        exec_id = exec_response['Id']
+        exec_stream = docker_api.exec_start(exec_id, stream=True)
+        return Popen(args=args,
+                     shell=self,
+                     uid=uid,
+                     container=self._container,
+                     docker_api=docker_api,
+                     exec_id=exec_id,
+                     stream=exec_stream)
 
 
 @attr.s(slots=True, frozen=True)
