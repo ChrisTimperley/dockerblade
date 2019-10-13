@@ -281,9 +281,9 @@ class ShellFactory:
         self.close()
 
     def close(self) -> None:
-        logger.debug("closing shell factory: {}", self)
+        logger.debug(f"closing shell factory: {self}")
         self.docker.close()
-        logger.debug("closed shell factory: {}", self)
+        logger.debug(f"closed shell factory: {self}")
 
     def build(self,
               name: str,
@@ -304,11 +304,11 @@ class ShellFactory:
         Shell
             A shell for the given container.
         """
-        logger.debug("building shell [{}] for container [{}]", path, name)
+        logger.debug(f"building shell [{path}] for container [{name}]")
         container = self.docker.client.containers.get(name)
         shell = Shell(container_name=name,
                       path=path,
                       container=container,
                       docker_api=self.docker.api)
-        logger.debug("built shell for container: {}", shell)
+        logger.debug(f"built shell for container: {shell}")
         return shell
