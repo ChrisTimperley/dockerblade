@@ -3,13 +3,27 @@ __all__ = ('Popen',)
 
 from typing import Optional, Iterator, Dict, Any
 import time
+import signal
+import subprocess
 
 from docker.models.containers import Container as DockerContainer
+from loguru import logger
 import attr
 import docker
 
 from .stopwatch import Stopwatch
 from .exceptions import TimeoutExpired
+
+
+def host_pid_to_container_pid(pid_host: int) -> Optional[int]:
+    fn_proc = f'/proc/{pid_host}/status'
+    try:
+        with open(fn_proc, 'r') as fh:
+            for line in fh:
+                if line.startswith('NSpid:'):
+                    return int(line.split()[2])
+    except FileNotFoundError:
+        return None
 
 
 class Popen:
@@ -53,7 +67,9 @@ class Popen:
         self.__returncode: Optional[int] = None
 
     def _inspect(self) -> Dict[str, Any]:
-        return self.__docker_api.exec_inspect(self.__exec_id)
+        info = self.__docker_api.exec_inspect(self.__exec_id)
+        # logger.debug(f"info: {info}")
+        return info
 
     @property
     def stream(self) -> Iterator[str]:
@@ -65,10 +81,12 @@ class Popen:
         return self.__args
 
     def __uid_to_pid(self) -> Optional[int]:
-        prefix = f'/bin/bash -c echo {self.__uid} > /dev/null && '
+        # FIXME careful with prefix
+        prefix = f'/bin/sh -c echo {self.__uid} > /dev/null && '
         cmd = f'ps -eo pid,cmd | grep "{prefix}"'
         while not self.finished:
-            code, output, duration = self.__shell.execute(cmd)
+            res = self.__shell.run(cmd)
+            output = res.output
             for line in output.split('\n'):
                 pid_str, _, p_cmd = line.strip().partition(' ')
                 if p_cmd.startswith(prefix):
@@ -76,10 +94,17 @@ class Popen:
         return None
 
     @property
+    def host_pid(self) -> Optional[int]:
+        return self._inspect()['Pid']
+
+    @property
     def pid(self) -> Optional[int]:
-        if not self.__pid and not self.finished:
-            self.__pid = self.__uid_to_pid()
-        return self.__pid
+        host_pid = self.host_pid
+        args = ['cat', f'/proc/{host_pid}/status']  #, 'grep NSpid']
+        line = subprocess.check_output(args, shell=True, stdin=None, stderr=None, text=True)
+        print(line)
+        assert False
+        return host_pid
 
     @property
     def finished(self) -> bool:
@@ -100,6 +125,7 @@ class Popen:
             The signal number.
         """
         pid = self.pid
+        logger.debug(f"sending signal {sig} to process {pid}")
         if pid:
             self.__shell.send_signal(pid, sig)
 
@@ -131,6 +157,7 @@ class Popen:
         stopwatch.start()
         while not self.finished:
             if time_limit and stopwatch.duration > time_limit:
+                logger.debug("timeout")
                 raise TimeoutExpired(self.args, time_limit)
             time.sleep(0.05)
         assert self.returncode is not None
