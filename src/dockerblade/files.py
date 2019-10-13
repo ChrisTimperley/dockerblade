@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 __all__ = ('FileSystem',)
 
-from .shell import Shell
+import shlex
+
+from .shell import Shell, CalledProcessError
 from .daemon import DockerDaemon
 
 
@@ -23,3 +25,14 @@ class FileSystem:
 
     def __repr__(self) -> str:
         return f'FileSystem(container_name={self.container_name})'
+
+    def exists(self, path: str) -> bool:
+        """Determines whether a file or directory exists at the given path.
+        Inspired by :meth:`os.path.exists`.
+        """
+        cmd = f'test -e {shlex.quote(path)}'
+        try:
+            self._shell.check_call(cmd)
+            return True
+        except CalledProcessError:
+            return False
