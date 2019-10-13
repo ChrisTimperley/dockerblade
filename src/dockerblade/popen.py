@@ -9,6 +9,7 @@ import attr
 import docker
 
 from .stopwatch import Stopwatch
+from .exceptions import TimeoutExpired
 
 
 class Popen:
@@ -92,6 +93,7 @@ class Popen:
 
     def send_signal(self, sig: int) -> None:
         """Sends a given signal to the process.
+
         Parameters
         ----------
         sig: int
@@ -115,13 +117,14 @@ class Popen:
 
     def wait(self, time_limit: Optional[float] = None) -> int:
         """Blocks until the process has terminated.
+
         Parameters
         ----------
         time_limit: float, optional
             An optional time limit.
         Raises
         ------
-        subprocess.TimeoutExpired:
+        TimeoutExpired:
             if the process does not terminate within the specified timeout.
         """
         stopwatch = Stopwatch()
