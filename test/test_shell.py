@@ -40,6 +40,9 @@ def test_check_output(alpine_310, shell_factory):
     b = lambda c: t(c, text=False).decode('utf-8').rstrip('\r\n')
     assert t("echo 'hello world'") == 'hello world'
     assert b("echo 'hello world'") == 'hello world'
+    assert t('NAME="cool" && echo "${NAME}"') == 'cool'
+    assert t('echo "${PWD}"', cwd='/tmp') == '/tmp'
+    assert t('echo "${PATH}"') == '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 
 def test_check_call(alpine_310, shell_factory):
@@ -47,6 +50,11 @@ def test_check_call(alpine_310, shell_factory):
     shell.check_output("exit 0")
     with pytest.raises(dockerblade.exceptions.CalledProcessError):
         shell.check_output("exit 1")
+
+
+def test_environ(alpine_310, shell_factory):
+    shell = shell_factory.build(alpine_310.id, '/bin/sh')
+    assert shell.environ('PATH') == '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 
 def test_popen(alpine_310, shell_factory):

@@ -12,7 +12,7 @@ import docker
 
 from .popen import Popen
 from .stopwatch import Stopwatch
-from .exceptions import CalledProcessError
+from .exceptions import CalledProcessError, EnvNotFoundError
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -96,7 +96,10 @@ class Shell:
         EnvNotFoundError
             if no environment variable exists with the given name.
         """
-        raise NotImplementedError
+        try:
+            return self.check_output(f'echo "${{{var}}}"', text=True)
+        except CalledProcessError as exc:
+            raise EnvNotFoundError(var) from exc
 
     def check_call(self,
                    args: str,
@@ -208,9 +211,12 @@ class Shell:
         with Stopwatch() as timer:
             retcode, output_bin = container.exec_run(
                 args_instrumented,
+                detach=False,
                 stderr=stderr,
                 stdout=stdout,
                 workdir=cwd)
+
+        logger.debug(f"retcode: {retcode}")
 
         output: Optional[Union[str, bytes]]
         if not stdout and not stderr:
