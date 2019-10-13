@@ -13,6 +13,7 @@ import docker
 from .popen import Popen
 from .stopwatch import Stopwatch
 from .exceptions import CalledProcessError, EnvNotFoundError
+from .daemon import DockerDaemon
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -66,7 +67,7 @@ class Shell:
     container_name: str = attr.ib()
     path: str = attr.ib()
     _container: DockerContainer = attr.ib(repr=False)
-    _docker_api: docker.APIClient = attr.ib(repr=False)
+    _docker: DockerDaemon = attr.ib(repr=False)
 
     def _instrument(self,
                     command: str,
@@ -240,7 +241,7 @@ class Shell:
               stdout: bool = True,
               stderr: bool = False
               ) -> Popen:
-        docker_api = self._docker_api
+        docker_api = self._docker.api
         args_instrumented = self._instrument(args)
         exec_response = docker_api.exec_create(self._container.id,
                                                args_instrumented,
@@ -264,20 +265,15 @@ class ShellFactory:
 
     Attributes
     ----------
-    docker_url: str
-        The URL of the associated Docker engine.
+    docker: DockerDaemon
+        A connection to the associated Docker engine.
     """
-    docker_url: str = attr.ib(default='unix://var/run/docker.sock')
-    _docker_api: docker.APIClient = \
-        attr.ib(init=False, repr=False, eq=False, hash=False)
-    _docker_client: docker.DockerClient = \
-        attr.ib(init=False, repr=False, eq=False, hash=False)
+    docker: DockerDaemon = attr.ib(factory=DockerDaemon)
 
-    def __attrs_post_init__(self) -> None:
-        docker_api = docker.APIClient(self.docker_url)
-        docker_client = docker.DockerClient(self.docker_url)
-        object.__setattr__(self, '_docker_api', docker_api)
-        object.__setattr__(self, '_docker_client', docker_client)
+    @staticmethod
+    def for_url(url: str) -> 'ShellFactory':
+        daemon = DockerDaemon(url)
+        return ShellFactory(daemon)
 
     def __enter__(self) -> 'ShellFactory':
         return self
@@ -286,10 +282,9 @@ class ShellFactory:
         self.close()
 
     def close(self) -> None:
-        logger.debug("closing shell factory: {}", self)
-        self._docker_api.close()
-        self._docker_client.close()
-        logger.debug("closed shell factory: {}", self)
+        logger.debug(f"closing shell factory: {self}")
+        self.docker.close()
+        logger.debug(f"closed shell factory: {self}")
 
     def build(self,
               name: str,
@@ -310,11 +305,11 @@ class ShellFactory:
         Shell
             A shell for the given container.
         """
-        logger.debug("building shell [{}] for container [{}]", path, name)
-        container = self._docker_client.containers.get(name)
+        logger.debug(f"building shell [{path}] for container [{name}]")
+        container = self.docker.client.containers.get(name)
         shell = Shell(container_name=name,
                       path=path,
                       container=container,
-                      docker_api=self._docker_api)
-        logger.debug("built shell for container: {}", shell)
+                      docker=self.docker)
+        logger.debug(f"built shell for container: {shell}")
         return shell

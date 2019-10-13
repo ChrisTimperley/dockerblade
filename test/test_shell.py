@@ -27,15 +27,20 @@ def shell_factory():
         yield factory
 
 
-def test_run(alpine_310, shell_factory):
-    shell = shell_factory.build(alpine_310.id, '/bin/sh')
+@pytest.fixture
+def shell_alpine_310(alpine_310, shell_factory):
+    yield shell_factory.build(alpine_310.id, '/bin/sh')
+
+
+def test_run(shell_alpine_310):
+    shell = shell_alpine_310
     result = shell.run("echo 'hello world'")
     assert result.returncode == 0
     assert result.output == 'hello world'
 
 
-def test_check_output(alpine_310, shell_factory):
-    shell = shell_factory.build(alpine_310.id, '/bin/sh')
+def test_check_output(shell_alpine_310):
+    shell = shell_alpine_310
     t = shell.check_output
     b = lambda c: t(c, text=False).decode('utf-8').rstrip('\r\n')
     assert t("echo 'hello world'") == 'hello world'
@@ -45,20 +50,20 @@ def test_check_output(alpine_310, shell_factory):
     assert t('echo "${PATH}"') == '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 
-def test_check_call(alpine_310, shell_factory):
-    shell = shell_factory.build(alpine_310.id, '/bin/sh')
+def test_check_call(shell_alpine_310):
+    shell = shell_alpine_310
     shell.check_output("exit 0")
     with pytest.raises(dockerblade.exceptions.CalledProcessError):
         shell.check_output("exit 1")
 
 
-def test_environ(alpine_310, shell_factory):
-    shell = shell_factory.build(alpine_310.id, '/bin/sh')
+def test_environ(shell_alpine_310):
+    shell = shell_alpine_310
     assert shell.environ('PATH') == '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 
-def test_popen(alpine_310, shell_factory):
-    shell = shell_factory.build(alpine_310.id, '/bin/sh')
+def test_popen(shell_alpine_310):
+    shell = shell_alpine_310
     container = shell._container
     id_container = container.id
     p = shell.popen("echo 'hello world'")
