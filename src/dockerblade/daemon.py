@@ -20,4 +20,10 @@ class DockerDaemon:
         docker_client = docker.DockerClient(self.url)
         object.__setattr__(self, 'client', client)
         object.__setattr__(self, 'api', api)
-        logger.debug(f"created daemon: {self}")
+        logger.debug(f"created daemon connection: {self}")
+
+    def close(self) -> None:
+        logger.debug(f"closing daemon connection: {self}")
+        self.api.close()
+        self.client.close()
+        logger.debug(f"closed daemon connection: {self}")
