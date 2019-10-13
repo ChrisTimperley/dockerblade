@@ -71,13 +71,10 @@ class Shell:
     def _instrument(self,
                     command: str,
                     time_limit: Optional[int] = None,
-                    kill_after: int = 1,
-                    identifier: Optional[str] = None
+                    kill_after: int = 1
                     ) -> str:
         q = shlex.quote
         logger.debug(f"instrumenting command: {command}")
-        if identifier:
-            command = f'echo {q(identifier)} > /dev/null && {command}'
         command = f'{self.path} -c {q(command)}'
         if time_limit:
             command = (f'timeout --kill-after={kill_after} '
@@ -238,7 +235,7 @@ class Shell:
               stderr: bool = False
               ) -> Popen:
         docker_api = self._docker_api
-        args_instrumented = self._instrument(args, identifier=uid)
+        args_instrumented = self._instrument(args)
         exec_response = docker_api.exec_create(self._container.id,
                                                args_instrumented,
                                                tty=True,
