@@ -2,7 +2,7 @@
 import typing as t_
 import attr as _attr
 
-T_ = t_.TypeVar('T', str, bytes)
+T_ = t_.TypeVar('T_', str, bytes)
 
 
 class DockerBladeException(Exception):
