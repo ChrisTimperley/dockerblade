@@ -41,6 +41,9 @@ class Popen:
         An output stream for this process.
     args: str
         The argument string that was used to generate this process.
+    cwd: str
+        The absolute path of the directory in the container where this
+        command should be executed.
     pid: int, optional
         The PID of this process, if known.
     finished: bool
@@ -50,6 +53,7 @@ class Popen:
         The return code produced by this process, if known.
     """
     args: str = attr.ib()
+    cwd: str = attr.ib()
     _container: DockerContainer = attr.ib()
     _docker_api: DockerAPIClient = attr.ib(repr=False)
     _exec_id: int = attr.ib()
