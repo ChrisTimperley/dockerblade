@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 __all__ = ('Shell', 'ShellFactory', 'CompletedProcess', 'CalledProcessError')
 
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional, Union, overload
+from typing_extensions import Literal
 import shlex
 
 from loguru import logger
@@ -96,9 +97,7 @@ class Shell:
     def check_call(self,
                    args: str,
                    *,
-                   cwd: str = '/',
-                   encoding: str = 'utf-8',
-                   text: bool = True
+                   cwd: str = '/'
                    ) -> None:
         """Executes a given commands, blocks until its completion, and checks
         that the return code is zero.
@@ -108,10 +107,29 @@ class Shell:
         CalledProcessError
             If the command produced a non-zero return code.
         """
-        self.run(args,
-                 cwd=cwd,
-                 text=text,
-                 encoding=encoding).check_returncode()
+        self.run(args, cwd=cwd).check_returncode()
+
+    @overload
+    def check_output(self,
+                     args: str,
+                     *,
+                     stderr: bool = True,
+                     cwd: str = '/',
+                     encoding: str = 'utf-8',
+                     text: Literal[False]
+                     ) -> bytes:
+        ...
+
+    @overload
+    def check_output(self,
+                     args: str,
+                     *,
+                     stderr: bool = True,
+                     cwd: str = '/',
+                     encoding: str = 'utf-8',
+                     text: Literal[True]
+                     ) -> str:
+        ...
 
     def check_output(self,
                      args: str,
@@ -120,7 +138,7 @@ class Shell:
                      cwd: str = '/',
                      encoding: str = 'utf-8',
                      text: bool = True
-                     ) -> T:
+                     ) -> Union[str, bytes]:
         """Executes a given commands, blocks until its completion, and checks
         that the return code is zero.
 
