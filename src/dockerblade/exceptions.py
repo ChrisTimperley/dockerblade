@@ -5,7 +5,7 @@ import attr as _attr
 T_ = t_.TypeVar('T', str, bytes)
 
 
-class DockerBladeException:
+class DockerBladeException(Exception):
     """Used by all exceptions that are thrown by DockerBlade."""
 
 
