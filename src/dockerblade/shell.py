@@ -239,6 +239,7 @@ class Shell:
         exec_response = docker_api.exec_create(self._container.id,
                                                args_instrumented,
                                                tty=True,
+                                               workdir=cwd,
                                                stdout=stdout,
                                                stderr=stderr)
         exec_id = exec_response['Id']
