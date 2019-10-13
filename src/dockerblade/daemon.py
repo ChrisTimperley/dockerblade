@@ -16,8 +16,8 @@ class DockerDaemon:
         attr.ib(init=False, eq=False, cmp=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
-        docker_api = docker.APIClient(self.url)
-        docker_client = docker.DockerClient(self.url)
+        api = docker.APIClient(self.url)
+        client = docker.DockerClient(self.url)
         object.__setattr__(self, 'client', client)
         object.__setattr__(self, 'api', api)
         logger.debug(f"created daemon connection: {self}")
