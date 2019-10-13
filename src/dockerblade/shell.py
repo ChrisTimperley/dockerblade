@@ -244,7 +244,6 @@ class Shell:
         exec_id = exec_response['Id']
         exec_stream = docker_api.exec_start(exec_id, stream=True)
         return Popen(args=args,
-                     shell=self,
                      container=self._container,
                      docker_api=docker_api,
                      exec_id=exec_id,

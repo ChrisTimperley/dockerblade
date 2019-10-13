@@ -49,7 +49,6 @@ class Popen:
     """
     def __init__(self,
                  args: str,
-                 shell: 'Shell',
                  container: DockerContainer,
                  docker_api: docker.APIClient,
                  exec_id: int,
@@ -57,7 +56,6 @@ class Popen:
                  ) -> None:
         self.__args = args
         self.__container = container
-        self.__shell = shell
         self.__docker_api = docker_api
         self.__exec_id = exec_id
         self.__stream = stream
@@ -109,9 +107,11 @@ class Popen:
             The signal number.
         """
         pid = self.pid
+        container = self.__container
         logger.debug(f"sending signal {sig} to process {pid}")
+        cmd = f'kill -{sig} {pid}'
         if pid:
-            self.__shell.send_signal(pid, sig)
+            container.exec_run(cmd, stdout=False, stderr=False, user='root')
 
     def kill(self) -> None:
         """Kills the process via a SIGKILL signal."""
