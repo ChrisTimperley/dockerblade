@@ -10,6 +10,7 @@ import attr
 import docker
 
 from .stopwatch import Stopwatch
+from .exceptions import CalledProcessError
 
 T = TypeVar('T', str, bytes)
 
@@ -30,27 +31,6 @@ class CompletedProcess(Generic[T]):
         The output, if any, that was produced by the process.
     """
     args: str
-    returncode: int
-    duration: float
-    output: Optional[T]
-
-
-@attr.s(auto_attribs=True, frozen=True)
-class CalledProcessError(Generic[T]):
-    """Thrown when a process produces a non-zero return code.
-
-    Attributes
-    ----------
-    cmd: str
-        The command that was used to launch the process.
-    returncode: int
-        The returncode that was produced by the process.
-    duration: float
-        The number of seconds that elapsed before the process terminated.
-    output: T, optional
-        The output, if any, that was produced by the process.
-    """
-    cmd: str
     returncode: int
     duration: float
     output: Optional[T]
@@ -108,9 +88,20 @@ class Shell:
                      stderr: bool = True,
                      cwd: str = '/'
                      ) -> T:
+        """Executes a given commands, blocks until its completion, and checks
+        that the return code is zero.
+
+        Raises
+        ------
+        CalledProcessError
+            If the command produced a non-zero return code.
+        """
         result = self.run(args, cwd=cwd)
         if result.returncode != 0:
-            raise
+            raise CalledProcessError(cmd=args,
+                                     returncode=result.returncode,
+                                     duration.result.duration,
+                                     output=result.output)
         return result.output
 
     def run(self,
