@@ -49,7 +49,6 @@ class Popen:
     """
     def __init__(self,
                  args: str,
-                 uid: str,
                  shell: 'Shell',
                  container: DockerContainer,
                  docker_api: docker.APIClient,
@@ -57,19 +56,17 @@ class Popen:
                  stream: Iterator[bytes]
                  ) -> None:
         self.__args = args
-        self.__uid = uid
         self.__container = container
         self.__shell = shell
         self.__docker_api = docker_api
         self.__exec_id = exec_id
         self.__stream = stream
         self.__pid: Optional[int] = None
+        self.__pid_host: Optional[int] = None
         self.__returncode: Optional[int] = None
 
     def _inspect(self) -> Dict[str, Any]:
-        info = self.__docker_api.exec_inspect(self.__exec_id)
-        # logger.debug(f"info: {info}")
-        return info
+        return self.__docker_api.exec_inspect(self.__exec_id)
 
     @property
     def stream(self) -> Iterator[str]:
@@ -80,31 +77,18 @@ class Popen:
     def args(self) -> str:
         return self.__args
 
-    def __uid_to_pid(self) -> Optional[int]:
-        # FIXME careful with prefix
-        prefix = f'/bin/sh -c echo {self.__uid} > /dev/null && '
-        cmd = f'ps -eo pid,cmd | grep "{prefix}"'
-        while not self.finished:
-            res = self.__shell.run(cmd)
-            output = res.output
-            for line in output.split('\n'):
-                pid_str, _, p_cmd = line.strip().partition(' ')
-                if p_cmd.startswith(prefix):
-                    return int(pid_str)
-        return None
-
     @property
     def host_pid(self) -> Optional[int]:
-        return self._inspect()['Pid']
+        if not self.__pid_host:
+            self.__pid_host = self._inspect()['Pid']
+        return self.__pid_host
 
     @property
     def pid(self) -> Optional[int]:
         host_pid = self.host_pid
-        args = ['cat', f'/proc/{host_pid}/status']  #, 'grep NSpid']
-        line = subprocess.check_output(args, shell=True, stdin=None, stderr=None, text=True)
-        print(line)
-        assert False
-        return host_pid
+        if not self.__pid and host_pid:
+            self.__pid = host_pid_to_container_pid(host_pid)
+        return self.__pid
 
     @property
     def finished(self) -> bool:
