@@ -97,7 +97,7 @@ class Shell:
             if no environment variable exists with the given name.
         """
         try:
-            val = self.check_call(f'echo "${{{var}}}"')
+            val = self.check_output(f'echo "${{{var}}}"')
         except CalledProcessError as exc:
             raise EnvNotFoundError(var) from exc
 
@@ -211,9 +211,12 @@ class Shell:
         with Stopwatch() as timer:
             retcode, output_bin = container.exec_run(
                 args_instrumented,
+                detach=False,
                 stderr=stderr,
                 stdout=stdout,
                 workdir=cwd)
+
+        logger.debug(f"retcode: {retcode}")
 
         output: Optional[Union[str, bytes]]
         if not stdout and not stderr:
