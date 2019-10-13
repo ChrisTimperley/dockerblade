@@ -107,7 +107,7 @@ class Shell:
         CalledProcessError
             If the command produced a non-zero return code.
         """
-        self.run(args, cwd=cwd).check_returncode()
+        self.run(args, stdout=False, cwd=cwd).check_returncode()
 
     @overload
     def check_output(self,
@@ -134,7 +134,7 @@ class Shell:
     def check_output(self,
                      args: str,
                      *,
-                     stderr: bool = True,
+                     stderr: bool = False,
                      cwd: str = '/',
                      encoding: str = 'utf-8',
                      text: bool = True
@@ -155,6 +155,8 @@ class Shell:
         result = self.run(args,
                           encoding=encoding,
                           text=text,
+                          stdout=True,
+                          stderr=stderr,
                           cwd=cwd)
         result.check_returncode()
         assert result.output is not None
@@ -165,7 +167,9 @@ class Shell:
             *,
             encoding: str = 'utf-8',
             cwd: str = '/',
-            text: bool = True
+            text: bool = True,
+            stdout: bool = True,
+            stderr: bool = False
             ) -> CompletedProcess:
         """Executes a given command and blocks until its completion.
 
@@ -183,6 +187,10 @@ class Shell:
             If :code:`True`, the output of the process is decoded to a string
             using the provided :param:`encoding`. If :code:`False`, the output
             of the process will be treated as binary.
+        stderr: bool
+            If :code:`True`, the stderr will be included in the output.
+        stdout: bool
+            If :code:`True`, the stdout will be included in the output.
 
         Returns
         -------
@@ -196,10 +204,14 @@ class Shell:
         with Stopwatch() as timer:
             retcode, output_bin = container.exec_run(
                 args_instrumented,
+                stderr=stderr,
+                stdout=stdout,
                 workdir=cwd)
 
-        output: Union[str, bytes]
-        if text:
+        output: Optional[Union[str, bytes]]
+        if not stdout and not stderr:
+            output = None
+        elif text:
             output = output_bin.decode(encoding).rstrip('\r\n')
         else:
             output = output_bin
