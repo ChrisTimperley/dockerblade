@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__all__ = ('Shell', 'ShellFactory', 'CompletedProcess')
+__all__ = ('Shell', 'ShellFactory', 'CompletedProcess', 'CalledProcessError')
 
 from typing import Tuple, Optional, Generic, TypeVar
 import shlex
@@ -10,6 +10,7 @@ import attr
 import docker
 
 from .stopwatch import Stopwatch
+from .exceptions import CalledProcessError
 
 T = TypeVar('T', str, bytes)
 
@@ -81,10 +82,33 @@ class Shell:
         """
         raise NotImplementedError
 
+    def check_output(self,
+                     args: str,
+                     *,
+                     stderr: bool = True,
+                     cwd: str = '/'
+                     ) -> T:
+        """Executes a given commands, blocks until its completion, and checks
+        that the return code is zero.
+
+        Raises
+        ------
+        CalledProcessError
+            If the command produced a non-zero return code.
+        """
+        result = self.run(args, cwd=cwd)
+        if result.returncode != 0:
+            raise CalledProcessError(cmd=args,
+                                     returncode=result.returncode,
+                                     duration=result.duration,
+                                     output=result.output)
+        assert result.output
+        return result.output
+
     def run(self,
             args: str,
             *,
-            context: str = '/'
+            cwd: str = '/'
             ) -> CompletedProcess:
         """Executes a given command and blocks until its completion.
 
@@ -100,7 +124,7 @@ class Shell:
         with Stopwatch() as timer:
             retcode, output = container.exec_run(
                 args_instrumented,
-                workdir=context)
+                workdir=cwd)
 
         output = output.decode('utf-8').rstrip('\n')
         result = CompletedProcess(args=args,
