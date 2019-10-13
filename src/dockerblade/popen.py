@@ -23,6 +23,7 @@ def host_pid_to_container_pid(pid_host: int) -> Optional[int]:
             for line in fh:
                 if line.startswith('NSpid:'):
                     return int(line.split()[2])
+        return None
     except FileNotFoundError:
         return None
 
