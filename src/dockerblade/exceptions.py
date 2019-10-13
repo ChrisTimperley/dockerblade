@@ -19,7 +19,7 @@ class EnvNotFoundError(DockerBladeException):
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
-class CalledProcessError(Generic[T_], DockerBladeException):
+class CalledProcessError(t_.Generic[T_], DockerBladeException):
     """Thrown when a process produces a non-zero return code.
 
     Attributes
