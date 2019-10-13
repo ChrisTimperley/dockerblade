@@ -100,7 +100,7 @@ class Shell:
         if result.returncode != 0:
             raise CalledProcessError(cmd=args,
                                      returncode=result.returncode,
-                                     duration.result.duration,
+                                     duration=result.duration,
                                      output=result.output)
         return result.output
 
