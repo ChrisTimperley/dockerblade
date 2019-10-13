@@ -40,6 +40,8 @@ def test_check_output(alpine_310, shell_factory):
     b = lambda c: t(c, text=False).decode('utf-8').rstrip('\r\n')
     assert t("echo 'hello world'") == 'hello world'
     assert b("echo 'hello world'") == 'hello world'
+    assert t('NAME="cool" && echo "${NAME}"') == 'cool'
+    assert t('echo "${PWD}"', cwd='/tmp') == '/tmp'
 
 
 def test_check_call(alpine_310, shell_factory):
