@@ -22,6 +22,12 @@ class DockerDaemon:
         object.__setattr__(self, 'api', api)
         logger.debug(f"created daemon connection: {self}")
 
+    def __enter__(self) -> 'DockerDaemon':
+        return self
+
+    def __exit__(self, ex_type, ex_val, ex_tb) -> None:
+        self.close()
+
     def close(self) -> None:
         logger.debug(f"closing daemon connection: {self}")
         self.api.close()
