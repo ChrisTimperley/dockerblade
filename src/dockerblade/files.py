@@ -31,8 +31,4 @@ class FileSystem:
         Inspired by :meth:`os.path.exists`.
         """
         cmd = f'test -e {shlex.quote(path)}'
-        try:
-            self._shell.check_call(cmd)
-            return True
-        except CalledProcessError:
-            return False
+        return self._shell.run(cmd, stdout=False).returncode == 0
