@@ -6,6 +6,7 @@ import time
 import signal
 import subprocess
 
+from docker import APIClient as DockerAPIClient
 from docker.models.containers import Container as DockerContainer
 from loguru import logger
 import attr
@@ -26,6 +27,7 @@ def host_pid_to_container_pid(pid_host: int) -> Optional[int]:
         return None
 
 
+@attr.s(slots=True, eq=False, hash=False)
 class Popen:
     """Provides access to a process that is running inside a given shell.
     Inspired by the :class:`subprocess.Popen` interface within the Python
@@ -47,46 +49,35 @@ class Popen:
     retcode: int, optional
         The return code produced by this process, if known.
     """
-    def __init__(self,
-                 args: str,
-                 container: DockerContainer,
-                 docker_api: docker.APIClient,
-                 exec_id: int,
-                 stream: Iterator[bytes]
-                 ) -> None:
-        self.__args = args
-        self.__container = container
-        self.__docker_api = docker_api
-        self.__exec_id = exec_id
-        self.__stream = stream
-        self.__pid: Optional[int] = None
-        self.__pid_host: Optional[int] = None
-        self.__returncode: Optional[int] = None
+    args: str = attr.ib()
+    _container: DockerContainer = attr.ib()
+    _docker_api: DockerAPIClient = attr.ib(repr=False)
+    _exec_id: int = attr.ib()
+    _stream: Iterator[bytes] = attr.ib(repr=False)
+    _pid: Optional[int] = attr.ib(init=False, default=None, repr=False)
+    _pid_host: Optional[int] = attr.ib(init=False, default=None)
+    _returncode: Optional[int] = attr.ib(init=False, default=None)
 
     def _inspect(self) -> Dict[str, Any]:
-        return self.__docker_api.exec_inspect(self.__exec_id)
+        return self._docker_api.exec_inspect(self._exec_id)
 
     @property
     def stream(self) -> Iterator[str]:
-        for line_bytes in self.__stream:
+        for line_bytes in self._stream:
             yield line_bytes.decode('utf-8')
 
     @property
-    def args(self) -> str:
-        return self.__args
-
-    @property
     def host_pid(self) -> Optional[int]:
-        if not self.__pid_host:
-            self.__pid_host = self._inspect()['Pid']
-        return self.__pid_host
+        if not self._pid_host:
+            self._pid_host = self._inspect()['Pid']
+        return self._pid_host
 
     @property
     def pid(self) -> Optional[int]:
         host_pid = self.host_pid
-        if not self.__pid and host_pid:
-            self.__pid = host_pid_to_container_pid(host_pid)
-        return self.__pid
+        if not self._pid and host_pid:
+            self._pid = host_pid_to_container_pid(host_pid)
+        return self._pid
 
     @property
     def finished(self) -> bool:
@@ -94,9 +85,9 @@ class Popen:
 
     @property
     def returncode(self) -> Optional[int]:
-        if self.__returncode is None:
-            self.__returncode = self._inspect()['ExitCode']
-        return self.__returncode
+        if self._returncode is None:
+            self._returncode = self._inspect()['ExitCode']
+        return self._returncode
 
     def send_signal(self, sig: int) -> None:
         """Sends a given signal to the process.
@@ -107,7 +98,7 @@ class Popen:
             The signal number.
         """
         pid = self.pid
-        container = self.__container
+        container = self._container
         logger.debug(f"sending signal {sig} to process {pid}")
         cmd = f'kill -{sig} {pid}'
         if pid:
