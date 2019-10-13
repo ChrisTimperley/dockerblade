@@ -45,3 +45,15 @@ def test_check_call(alpine_310, shell_factory):
     shell.check_output("exit 0")
     with pytest.raises(dockerblade.exceptions.CalledProcessError):
         shell.check_output("exit 1")
+
+
+def test_popen(alpine_310, shell_factory):
+    shell = shell_factory.build(alpine_310.id, '/bin/sh')
+    p = shell.popen("echo 'hello world'")
+    assert p.wait() == 0
+    assert p.returncode == 0
+
+    p = shell.popen("sleep 5 && exit 1")
+    with pytest.raises(dockerblade.exceptions.TimeoutExpired):
+        p.wait(1)
+    assert p.wait(8) == 1
