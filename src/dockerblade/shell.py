@@ -86,6 +86,12 @@ class Shell:
         logger.debug(f"instrumented command: {command}")
         return command
 
+    def send_signal(self, pid: int, sig: int) -> None:
+        # FIXME run as root!
+        logger.debug(f"sending signal {sig} to process {pid}")
+        cmd = f'kill -{sig} {pid}'
+        self.run(cmd)
+
     def environ(self, var: str) -> str:
         """Reads the value of a given environment variable inside this shell.
 
