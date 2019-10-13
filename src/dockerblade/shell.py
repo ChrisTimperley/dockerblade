@@ -12,7 +12,7 @@ import docker
 
 from .popen import Popen
 from .stopwatch import Stopwatch
-from .exceptions import CalledProcessError
+from .exceptions import CalledProcessError, EnvNotFoundError
 
 
 @attr.s(auto_attribs=True, frozen=True)
