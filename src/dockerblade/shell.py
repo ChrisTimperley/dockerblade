@@ -98,7 +98,9 @@ class Shell:
     def check_call(self,
                    args: str,
                    *,
-                   cwd: str = '/'
+                   cwd: str = '/',
+                   encoding: str = 'utf-8',
+                   text: bool = True
                    ) -> None:
         """Executes a given commands, blocks until its completion, and checks
         that the return code is zero.
@@ -114,7 +116,9 @@ class Shell:
                      args: str,
                      *,
                      stderr: bool = True,
-                     cwd: str = '/'
+                     cwd: str = '/',
+                     encoding: str = 'utf-8',
+                     text: bool = True
                      ) -> T:
         """Executes a given commands, blocks until its completion, and checks
         that the return code is zero.
@@ -137,15 +141,33 @@ class Shell:
     def run(self,
             args: str,
             *,
-            cwd: str = '/'
+            encoding: str = 'utf-8',
+            cwd: str = '/',
+            text: bool = True
             ) -> CompletedProcess:
         """Executes a given command and blocks until its completion.
+
+        Parameters
+        ----------
+        args: str
+            The command that should be executed.
+        encoding: str
+            The encoding that should be used for decoding, if the output of
+            the process is text rather than binary.
+        cwd: str
+            The absolute path of the directory in the container where this
+            command should be executed.
+        text: bool
+            If :code:`True`, the output of the process is decoded to a string
+            using the provided :param:`encoding`. If :code:`False`, the output
+            of the process will be treated as binary.
 
         Returns
         -------
         CompletedProcess
             A summary of the outcome of the command execution.
         """
+        output: Union[str, bytes]
         logger.debug(f"executing command: {args}")
         container = self._container
         args_instrumented = self._instrument(args)
@@ -155,7 +177,9 @@ class Shell:
                 args_instrumented,
                 workdir=cwd)
 
-        output = output.decode('utf-8').rstrip('\n')
+        if text:
+            output = output.decode(encoding).rstrip('\r\n')
+
         result = CompletedProcess(args=args,
                                   returncode=retcode,
                                   duration=timer.duration,
