@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __all__ = ('Shell', 'ShellFactory', 'CompletedProcess', 'CalledProcessError')
 
-from typing import Tuple, Optional, Generic, TypeVar
+from typing import Tuple, Optional, Union
 import shlex
 
 from loguru import logger
@@ -12,11 +12,9 @@ import docker
 from .stopwatch import Stopwatch
 from .exceptions import CalledProcessError
 
-T = TypeVar('T', str, bytes)
-
 
 @attr.s(auto_attribs=True, frozen=True)
-class CompletedProcess(Generic[T]):
+class CompletedProcess:
     """Stores the result of a completed process.
 
     Attributes
@@ -33,7 +31,7 @@ class CompletedProcess(Generic[T]):
     args: str
     returncode: int
     duration: float
-    output: Optional[T]
+    output: Optional[Union[str, bytes]]
 
     def check_returncode(self) -> None:
         """Raises a CalledProcessError if returncode is non-zero.
@@ -110,7 +108,10 @@ class Shell:
         CalledProcessError
             If the command produced a non-zero return code.
         """
-        self.run(args, cwd=cwd).check_returncode()
+        self.run(args,
+                 cwd=cwd,
+                 text=text,
+                 encoding=encoding).check_returncode()
 
     def check_output(self,
                      args: str,
@@ -133,7 +134,10 @@ class Shell:
         CalledProcessError
             If the command produced a non-zero return code.
         """
-        result = self.run(args, cwd=cwd)
+        result = self.run(args,
+                          encoding=encoding,
+                          text=text,
+                          cwd=cwd)
         result.check_returncode()
         assert result.output is not None
         return result.output
@@ -167,18 +171,20 @@ class Shell:
         CompletedProcess
             A summary of the outcome of the command execution.
         """
-        output: Union[str, bytes]
         logger.debug(f"executing command: {args}")
         container = self._container
         args_instrumented = self._instrument(args)
 
         with Stopwatch() as timer:
-            retcode, output = container.exec_run(
+            retcode, output_bin = container.exec_run(
                 args_instrumented,
                 workdir=cwd)
 
+        output: Union[str, bytes]
         if text:
-            output = output.decode(encoding).rstrip('\r\n')
+            output = output_bin.decode(encoding).rstrip('\r\n')
+        else:
+            output = output_bin
 
         result = CompletedProcess(args=args,
                                   returncode=retcode,
