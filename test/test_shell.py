@@ -42,6 +42,7 @@ def test_check_output(alpine_310, shell_factory):
     assert b("echo 'hello world'") == 'hello world'
     assert t('NAME="cool" && echo "${NAME}"') == 'cool'
     assert t('echo "${PWD}"', cwd='/tmp') == '/tmp'
+    assert t('echo "${PATH}"') == '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 
 def test_check_call(alpine_310, shell_factory):
