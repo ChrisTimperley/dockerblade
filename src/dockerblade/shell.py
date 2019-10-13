@@ -96,7 +96,10 @@ class Shell:
         EnvNotFoundError
             if no environment variable exists with the given name.
         """
-        raise NotImplementedError
+        try:
+            val = self.check_call(f'echo "${{{var}}}"')
+        except CalledProcessError as exc:
+            raise EnvNotFoundError(var) from exc
 
     def check_call(self,
                    args: str,
