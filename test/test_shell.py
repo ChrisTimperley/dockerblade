@@ -49,6 +49,11 @@ def test_check_call(alpine_310, shell_factory):
         shell.check_output("exit 1")
 
 
+def test_environ(alpine_310, shell_factory):
+    shell = shell_factory.build(alpine_310.id, '/bin/sh')
+    assert shell.environ('PATH') == '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+
+
 def test_popen(alpine_310, shell_factory):
     shell = shell_factory.build(alpine_310.id, '/bin/sh')
     container = shell._container
