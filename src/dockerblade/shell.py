@@ -13,7 +13,7 @@ import docker
 from .popen import Popen
 from .stopwatch import Stopwatch
 from .exceptions import CalledProcessError, EnvNotFoundError
-from .docker_daemon import DockerDaemon
+from .daemon import DockerDaemon
 
 
 @attr.s(auto_attribs=True, frozen=True)
