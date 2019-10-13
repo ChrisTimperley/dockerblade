@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from contextlib import ExitStack
+import subprocess
+import time
 
 import pytest
 import docker
@@ -49,11 +51,14 @@ def test_check_call(alpine_310, shell_factory):
 
 def test_popen(alpine_310, shell_factory):
     shell = shell_factory.build(alpine_310.id, '/bin/sh')
+    container = shell._container
+    id_container = container.id
     p = shell.popen("echo 'hello world'")
     assert p.wait() == 0
     assert p.returncode == 0
 
-    p = shell.popen("sleep 5 && exit 1")
+    p = shell.popen("sleep 60 && exit 1")
     with pytest.raises(dockerblade.exceptions.TimeoutExpired):
         p.wait(1)
-    assert p.wait(8) == 1
+    p.kill()
+    assert p.wait(1.5) != 0
