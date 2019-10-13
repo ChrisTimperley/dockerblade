@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__all__ = ('Shell', 'ShellFactory', 'CompletedProcess')
+__all__ = ('Shell', 'ShellFactory', 'CompletedProcess', 'CalledProcessError')
 
 from typing import Tuple, Optional, Generic, TypeVar
 import shlex
@@ -30,6 +30,27 @@ class CompletedProcess(Generic[T]):
         The output, if any, that was produced by the process.
     """
     args: str
+    returncode: int
+    duration: float
+    output: Optional[T]
+
+
+@attr.s(auto_attribs=True, frozen=True)
+class CalledProcessError(Generic[T]):
+    """Thrown when a process produces a non-zero return code.
+
+    Attributes
+    ----------
+    cmd: str
+        The command that was used to launch the process.
+    returncode: int
+        The returncode that was produced by the process.
+    duration: float
+        The number of seconds that elapsed before the process terminated.
+    output: T, optional
+        The output, if any, that was produced by the process.
+    """
+    cmd: str
     returncode: int
     duration: float
     output: Optional[T]
@@ -81,10 +102,21 @@ class Shell:
         """
         raise NotImplementedError
 
+    def check_output(self,
+                     args: str,
+                     *,
+                     stderr: bool = True,
+                     cwd: str = '/'
+                     ) -> T:
+        result = self.run(args, cwd=cwd)
+        if result.returncode != 0:
+            raise
+        return result.output
+
     def run(self,
             args: str,
             *,
-            context: str = '/'
+            cwd: str = '/'
             ) -> CompletedProcess:
         """Executes a given command and blocks until its completion.
 
@@ -100,7 +132,7 @@ class Shell:
         with Stopwatch() as timer:
             retcode, output = container.exec_run(
                 args_instrumented,
-                workdir=context)
+                workdir=cwd)
 
         output = output.decode('utf-8').rstrip('\n')
         result = CompletedProcess(args=args,
