@@ -102,6 +102,7 @@ class Shell:
                                      returncode=result.returncode,
                                      duration=result.duration,
                                      output=result.output)
+        assert result.output
         return result.output
 
     def run(self,
