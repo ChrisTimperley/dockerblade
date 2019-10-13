@@ -35,6 +35,19 @@ class CompletedProcess(Generic[T]):
     duration: float
     output: Optional[T]
 
+    def check_returncode(self) -> None:
+        """Raises a CalledProcessError if returncode is non-zero.
+
+        Raises
+        ------
+        CalledProcessError
+            If the return code is non-zero.
+        """
+        if self.returncode != 0:
+            raise CalledProcessError(cmd=self.args,
+                                     returncode=self.returncode,
+                                     duration=self.duration,
+                                     output=self.output)
 
 @attr.s(eq=False, hash=False)
 class Shell:
@@ -97,11 +110,7 @@ class Shell:
             If the command produced a non-zero return code.
         """
         result = self.run(args, cwd=cwd)
-        if result.returncode != 0:
-            raise CalledProcessError(cmd=args,
-                                     returncode=result.returncode,
-                                     duration=result.duration,
-                                     output=result.output)
+        result.check_returncode()
         assert result.output
         return result.output
 
