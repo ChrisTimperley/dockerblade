@@ -4,6 +4,7 @@ from contextlib import ExitStack
 import pytest
 import docker
 
+import dockerblade
 from dockerblade import Shell, ShellFactory
 
 
@@ -31,7 +32,14 @@ def test_run(alpine_310, shell_factory):
     assert result.output == 'hello world'
 
 
-def test_output(alpine_310, shell_factory):
+def test_check_output(alpine_310, shell_factory):
     shell = shell_factory.build(alpine_310.id, '/bin/sh')
     output = shell.check_output("echo 'hello world'")
     assert output == 'hello world'
+
+
+def test_check_call(alpine_310, shell_factory):
+    shell = shell_factory.build(alpine_310.id, '/bin/sh')
+    shell.check_output("exit 0")
+    with pytest.raises(dockerblade.exceptions.CalledProcessError):
+        shell.check_output("exit 1")

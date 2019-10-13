@@ -95,6 +95,21 @@ class Shell:
         """
         raise NotImplementedError
 
+    def check_call(self,
+                   args: str,
+                   *,
+                   cwd: str = '/'
+                   ) -> None:
+        """Executes a given commands, blocks until its completion, and checks
+        that the return code is zero.
+
+        Raises
+        ------
+        CalledProcessError
+            If the command produced a non-zero return code.
+        """
+        self.run(args, cwd=cwd).check_returncode()
+
     def check_output(self,
                      args: str,
                      *,
@@ -104,6 +119,11 @@ class Shell:
         """Executes a given commands, blocks until its completion, and checks
         that the return code is zero.
 
+        Returns
+        -------
+        str
+            The output of the command execution.
+
         Raises
         ------
         CalledProcessError
@@ -111,7 +131,7 @@ class Shell:
         """
         result = self.run(args, cwd=cwd)
         result.check_returncode()
-        assert result.output
+        assert result.output is not None
         return result.output
 
     def run(self,
