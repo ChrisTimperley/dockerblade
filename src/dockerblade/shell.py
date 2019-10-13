@@ -10,6 +10,7 @@ from docker.models.containers import Container as DockerContainer
 import attr
 import docker
 
+from .popen import Popen
 from .stopwatch import Stopwatch
 from .exceptions import CalledProcessError
 
@@ -70,19 +71,22 @@ class Shell:
     def _instrument(self,
                     command: str,
                     time_limit: Optional[int] = None,
-                    kill_after: int = 1,
-                    identifier: Optional[str] = None
+                    kill_after: int = 1
                     ) -> str:
         q = shlex.quote
         logger.debug(f"instrumenting command: {command}")
-        if identifier:
-            command = f'echo {q(identifier)} > /dev/null && {command}'
         command = f'{self.path} -c {q(command)}'
         if time_limit:
             command = (f'timeout --kill-after={kill_after} '
                        f'--signal=SIGTERM {time_limit} {command}')
         logger.debug(f"instrumented command: {command}")
         return command
+
+    def send_signal(self, pid: int, sig: int) -> None:
+        # FIXME run as root!
+        logger.debug(f"sending signal {sig} to process {pid}")
+        cmd = f'kill -{sig} {pid}'
+        self.run(cmd)
 
     def environ(self, var: str) -> str:
         """Reads the value of a given environment variable inside this shell.
@@ -222,6 +226,30 @@ class Shell:
                                   output=output)
         logger.debug(f"executed command: {result}")
         return result
+
+    def popen(self,
+              args: str,
+              *,
+              cwd: str = '/',
+              stdout: bool = True,
+              stderr: bool = False
+              ) -> Popen:
+        docker_api = self._docker_api
+        args_instrumented = self._instrument(args)
+        exec_response = docker_api.exec_create(self._container.id,
+                                               args_instrumented,
+                                               tty=True,
+                                               workdir=cwd,
+                                               stdout=stdout,
+                                               stderr=stderr)
+        exec_id = exec_response['Id']
+        exec_stream = docker_api.exec_start(exec_id, stream=True)
+        return Popen(args=args,
+                     cwd=cwd,
+                     container=self._container,
+                     docker_api=docker_api,
+                     exec_id=exec_id,
+                     stream=exec_stream)
 
 
 @attr.s(slots=True, frozen=True)

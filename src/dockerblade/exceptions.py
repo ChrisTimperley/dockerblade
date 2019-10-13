@@ -35,3 +35,18 @@ class CalledProcessError(DockerBladeException):
     returncode: int
     duration: float
     output: t_.Optional[t_.Union[str, bytes]]
+
+
+@_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
+class TimeoutExpired(DockerBladeException):
+    """Thrown when a timeout expires while waiting for a process.
+
+    Attributes
+    ----------
+    cmd: str
+        The command that was used to launch the process.
+    timeout: float
+        The timeout in seconds.
+    """
+    cmd: str
+    timeout: float
