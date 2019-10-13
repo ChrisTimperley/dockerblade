@@ -267,7 +267,7 @@ class ShellFactory:
     docker: DockerDaemon
         A connection to the associated Docker engine.
     """
-    docker: DockerDaemon = attr.ib()
+    docker: DockerDaemon = attr.ib(factory=DockerDaemon)
 
     @staticmethod
     def for_url(url: str) -> 'ShellFactory':
