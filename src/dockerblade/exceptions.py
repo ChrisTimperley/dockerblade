@@ -2,8 +2,6 @@
 import typing as t_
 import attr as _attr
 
-T_ = t_.TypeVar('T_', str, bytes)
-
 
 class DockerBladeException(Exception):
     """Used by all exceptions that are thrown by DockerBlade."""
@@ -19,7 +17,7 @@ class EnvNotFoundError(DockerBladeException):
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
-class CalledProcessError(t_.Generic[T_], DockerBladeException):
+class CalledProcessError(DockerBladeException):
     """Thrown when a process produces a non-zero return code.
 
     Attributes
@@ -36,4 +34,4 @@ class CalledProcessError(t_.Generic[T_], DockerBladeException):
     cmd: str
     returncode: int
     duration: float
-    output: t_.Optional[T_]
+    output: t_.Optional[t_.Union[str, bytes]]

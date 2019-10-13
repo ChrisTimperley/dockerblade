@@ -34,8 +34,10 @@ def test_run(alpine_310, shell_factory):
 
 def test_check_output(alpine_310, shell_factory):
     shell = shell_factory.build(alpine_310.id, '/bin/sh')
-    output = shell.check_output("echo 'hello world'")
-    assert output == 'hello world'
+    t = shell.check_output
+    b = lambda c: t(c, text=False).decode('utf-8').rstrip('\r\n')
+    assert t("echo 'hello world'") == 'hello world'
+    assert b("echo 'hello world'") == 'hello world'
 
 
 def test_check_call(alpine_310, shell_factory):
