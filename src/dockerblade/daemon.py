@@ -11,9 +11,9 @@ class DockerDaemon:
     """Maintains a connection to a Docker daemon."""
     url: str = attr.ib(default='unix://var/run/docker.sock')
     client: docker.DockerClient = \
-        attr.ib(init=False, eq=False, cmp=False, repr=False)
+        attr.ib(init=False, eq=False, hash=False, repr=False)
     api: docker.APIClient = \
-        attr.ib(init=False, eq=False, cmp=False, repr=False)
+        attr.ib(init=False, eq=False, hash=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         api = docker.APIClient(self.url)
