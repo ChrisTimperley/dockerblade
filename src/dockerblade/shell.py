@@ -131,7 +131,7 @@ class Shell:
         """
         result = self.run(args, cwd=cwd)
         result.check_returncode()
-        assert result.output
+        assert result.output is not None
         return result.output
 
     def run(self,
