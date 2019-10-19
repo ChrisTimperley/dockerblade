@@ -49,7 +49,7 @@ class DockerDaemon:
         """Creates a Docker container from a given image."""
         logger.debug(f"provisioning container for image [{image}]")
         container: Container
-        raise NotImplementedError       
+        raise NotImplementedError
         logger.debug(f"provisioned container [{container}]"
                      f" for image [{image}]")
         return container
