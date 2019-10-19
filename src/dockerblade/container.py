@@ -6,15 +6,20 @@ from docker.models.containers import Container as DockerContainer
 
 from .daemon import DockerDaemon
 
+from .shell import Shell
+
 
 @attr.s(slots=True, frozen=True)
 class Container:
     """Provides access to a Docker container."""
-    id: str = attr.ib()
     daemon: DockerDaemon = attr.ib()
     _docker: DockerContainer = \
-        attr.ib(init=False, repr=False, eq=False, hash=False)
+        attr.ib(repr=False, eq=False, hash=False)
+    id: str = attr.ib(init=False, repr=True)
 
     def __attrs_post_init__(self) -> None:
-        docker_client = self.daemon.client
-        self._docker_container = docker_client.containers.get(self.id)
+        object.__setattr__(self, 'id', self._docker.id)
+
+    def shell(self, path: str = '/bin/sh') -> Shell:
+        """Constructs a shell for this Docker container."""
+        return Shell(self, path)
