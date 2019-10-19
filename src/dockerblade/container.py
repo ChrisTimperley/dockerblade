@@ -6,10 +6,10 @@ import typing
 import attr
 from docker.models.containers import Container as DockerContainer
 
+from .shell import Shell
+
 if typing.TYPE_CHECKING:
     from .daemon import DockerDaemon
-
-from .shell import Shell
 
 
 @attr.s(slots=True, frozen=True)
