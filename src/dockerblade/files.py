@@ -14,7 +14,7 @@ if typing.TYPE_CHECKING:
 @attr.s(slots=True)
 class FileSystem:
     """Provides access to a Docker filesystem.
-    
+
     Attributes
     ----------
     container: Container
