@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 __all__ = ('Shell', 'CompletedProcess', 'CalledProcessError')
 
+import typing
 from typing import Tuple, Optional, Union, overload
 from typing_extensions import Literal
 import shlex
@@ -10,11 +11,13 @@ from docker.models.containers import Container as DockerContainer
 import attr
 import docker
 
-from .container import Container
 from .popen import Popen
 from .stopwatch import Stopwatch
 from .exceptions import CalledProcessError, EnvNotFoundError
-from .daemon import DockerDaemon
+
+if typing.TYPE_CHECKING:
+    from .container import Container
+    from .daemon import DockerDaemon
 
 
 @attr.s(auto_attribs=True, frozen=True)
