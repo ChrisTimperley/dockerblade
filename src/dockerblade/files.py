@@ -3,6 +3,8 @@ __all__ = ('FileSystem',)
 
 import shlex
 
+import attr
+
 from .shell import Shell, CalledProcessError
 from .daemon import DockerDaemon
 
