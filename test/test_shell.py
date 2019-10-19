@@ -1,27 +1,9 @@
 # -*- coding: utf-8 -*-
-from contextlib import ExitStack
-import subprocess
-import time
-
 import pytest
-import docker
 
 import dockerblade
-from dockerblade import Shell, DockerDaemon
 
-
-@pytest.fixture
-def alpine_310():
-    with ExitStack() as exit_stack:
-        daemon = DockerDaemon()
-        exit_stack.push(daemon)
-
-        docker_client = daemon.client
-        docker_container = \
-            docker_client.containers.run('alpine:3.10', stdin_open=True, detach=True)
-        container = daemon.attach(docker_container.id)
-        exit_stack.callback(container.remove)
-        yield container
+from common import alpine_310
 
 
 def test_run(alpine_310):
