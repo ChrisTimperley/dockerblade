@@ -103,11 +103,12 @@ class Popen:
             The signal number.
         """
         pid = self.pid
-        container = self._container
+        docker_container = self._container._docker
         logger.debug(f"sending signal {sig} to process {pid}")
         cmd = f'kill -{sig} -{pid}'
         if pid:
-            container.exec_run(cmd, stdout=False, stderr=False, user='root')
+            docker_container.exec_run(cmd,
+                                      stdout=False, stderr=False, user='root')
 
     def kill(self) -> None:
         """Kills the process via a SIGKILL signal."""

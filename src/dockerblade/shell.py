@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-__all__ = ('Shell', 'ShellFactory', 'CompletedProcess', 'CalledProcessError')
+__all__ = ('Shell', 'CompletedProcess', 'CalledProcessError')
 
+import typing
 from typing import Tuple, Optional, Union, overload
 from typing_extensions import Literal
 import shlex
@@ -13,7 +14,10 @@ import docker
 from .popen import Popen
 from .stopwatch import Stopwatch
 from .exceptions import CalledProcessError, EnvNotFoundError
-from .daemon import DockerDaemon
+
+if typing.TYPE_CHECKING:
+    from .container import Container
+    from .daemon import DockerDaemon
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -64,10 +68,8 @@ class Shell:
         The absolute path to the binary (inside the container) that should be
         used to provide this shell.
     """
-    container_name: str = attr.ib()
+    container: 'Container' = attr.ib()
     path: str = attr.ib()
-    _container: DockerContainer = attr.ib(repr=False)
-    _docker: DockerDaemon = attr.ib(repr=False)
 
     def _instrument(self,
                     command: str,
@@ -206,11 +208,11 @@ class Shell:
             A summary of the outcome of the command execution.
         """
         logger.debug(f"executing command: {args}")
-        container = self._container
+        docker_container = self.container._docker
         args_instrumented = self._instrument(args)
 
         with Stopwatch() as timer:
-            retcode, output_bin = container.exec_run(
+            retcode, output_bin = docker_container.exec_run(
                 args_instrumented,
                 detach=False,
                 stderr=stderr,
@@ -241,9 +243,9 @@ class Shell:
               stdout: bool = True,
               stderr: bool = False
               ) -> Popen:
-        docker_api = self._docker.api
+        docker_api = self.container.daemon.api
         args_instrumented = self._instrument(args)
-        exec_response = docker_api.exec_create(self._container.id,
+        exec_response = docker_api.exec_create(self.container.id,
                                                args_instrumented,
                                                tty=True,
                                                workdir=cwd,
@@ -253,63 +255,7 @@ class Shell:
         exec_stream = docker_api.exec_start(exec_id, stream=True)
         return Popen(args=args,
                      cwd=cwd,
-                     container=self._container,
+                     container=self.container,
                      docker_api=docker_api,
                      exec_id=exec_id,
                      stream=exec_stream)
-
-
-@attr.s(slots=True, frozen=True)
-class ShellFactory:
-    """Used to construct shells.
-
-    Attributes
-    ----------
-    docker: DockerDaemon
-        A connection to the associated Docker engine.
-    """
-    docker: DockerDaemon = attr.ib(factory=DockerDaemon)
-
-    @staticmethod
-    def for_url(url: str) -> 'ShellFactory':
-        daemon = DockerDaemon(url)
-        return ShellFactory(daemon)
-
-    def __enter__(self) -> 'ShellFactory':
-        return self
-
-    def __exit__(self, ex_type, ex_val, ex_tb) -> None:
-        self.close()
-
-    def close(self) -> None:
-        logger.debug(f"closing shell factory: {self}")
-        self.docker.close()
-        logger.debug(f"closed shell factory: {self}")
-
-    def build(self,
-              name: str,
-              path: str = '/bin/bash'
-              ) -> 'Shell':
-        """Constructs a shell for a given Docker container.
-
-        Parameters
-        ----------
-        name: str
-            The name or ID of the Docker container.
-        path: str
-            The absolute path to the shell inside that container that should
-            be used (e.g., :code:`/bin/bash`).
-
-        Returns
-        -------
-        Shell
-            A shell for the given container.
-        """
-        logger.debug(f"building shell [{path}] for container [{name}]")
-        container = self.docker.client.containers.get(name)
-        shell = Shell(container_name=name,
-                      path=path,
-                      container=container,
-                      docker=self.docker)
-        logger.debug(f"built shell for container: {shell}")
-        return shell
