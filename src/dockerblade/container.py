@@ -7,6 +7,7 @@ import attr
 from docker.models.containers import Container as DockerContainer
 
 from .shell import Shell
+from .files import FileSystem
 
 if typing.TYPE_CHECKING:
     from .daemon import DockerDaemon
@@ -26,6 +27,10 @@ class Container:
     def shell(self, path: str = '/bin/sh') -> Shell:
         """Constructs a shell for this Docker container."""
         return Shell(self, path)
+
+    def filesystem(self) -> FileSystem:
+        """Provides access to the filesystem for this container."""
+        return FileSystem(self, self.shell())
 
     def remove(self, force: bool = True) -> None:
         """Removes this Docker container."""

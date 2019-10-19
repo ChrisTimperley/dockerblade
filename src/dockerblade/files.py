@@ -1,33 +1,27 @@
 # -*- coding: utf-8 -*-
 __all__ = ('FileSystem',)
 
+import typing
 import shlex
 
 import attr
 
-from .shell import Shell, CalledProcessError
-from .daemon import DockerDaemon
+if typing.TYPE_CHECKING:
+    from .shell import Shell
+    from .container import Container
 
 
-@attr.s(slots=True, eq=False, hash=False, repr=False)
+@attr.s(slots=True)
 class FileSystem:
     """Provides access to a Docker filesystem.
     
     Attributes
     ----------
-    container_name: str
-        The name of the container to which the filesystem belongs.
+    container: Container
+        The container to which this filesystem belongs.
     """
-    _daemon: DockerDaemon = attr.ib(factory=DockerDaemon)
-    _shell: Shell = attr.ib(init=False)
-
-    @property
-    def container_name(self) -> str:
-        """The name of the container to which this filesystem belongs."""
-        return self._shell.container_name
-
-    def __repr__(self) -> str:
-        return f'FileSystem(container_name={self.container_name})'
+    container: 'Container' = attr.ib()
+    _shell: 'Shell' = attr.ib(repr=False, eq=False, hash=False)
 
     def exists(self, path: str) -> bool:
         """Determines whether a file or directory exists at the given path.
