@@ -33,6 +33,11 @@ def test_run(alpine_310):
     assert result.returncode == 0
     assert result.output == 'hello world'
 
+    # see issue #25
+    result = shell.run("echo 'hello world'", stderr=False, stdout=False)
+    assert result.returncode == 0
+    assert result.output == None
+
 
 def test_check_output(alpine_310):
     shell = alpine_310.shell('/bin/sh')
