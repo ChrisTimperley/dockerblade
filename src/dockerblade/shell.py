@@ -208,6 +208,7 @@ class Shell:
             A summary of the outcome of the command execution.
         """
         logger.debug(f"executing command: {args}")
+        no_output = not stdout and not stderr
         docker_container = self.container._docker
         args_instrumented = self._instrument(args)
 
@@ -215,14 +216,17 @@ class Shell:
             retcode, output_bin = docker_container.exec_run(
                 args_instrumented,
                 detach=False,
-                stderr=stderr,
-                stdout=stdout,
+                tty=True,
+                stream=False,
+                socket=False,
+                stderr=False if no_output else stderr,  # BUG #25
+                stdout=True if no_output else stdout,  # BUG #25
                 workdir=cwd)
 
         logger.debug(f"retcode: {retcode}")
 
         output: Optional[Union[str, bytes]]
-        if not stdout and not stderr:
+        if no_output:
             output = None
         elif text:
             output = output_bin.decode(encoding).rstrip('\r\n')
