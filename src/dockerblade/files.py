@@ -21,6 +21,7 @@ class FileSystem:
 
     @property
     def container_name(self) -> str:
+        """The name of the container to which this filesystem belongs."""
         return self._shell.container_name
 
     def __repr__(self) -> str:
