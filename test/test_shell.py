@@ -11,14 +11,11 @@ from dockerblade import Shell, DockerDaemon
 
 
 @pytest.fixture
-def daemon():
-    with DockerDaemon() as daemon:
-        yield daemon
-
-
-@pytest.fixture
-def alpine_310(daemon):
+def alpine_310():
     with ExitStack() as exit_stack:
+        daemon = DockerDaemon()
+        exit_stack.push(daemon)
+
         docker_client = daemon.client
         docker_container = \
             docker_client.containers.run('alpine:3.10', stdin_open=True, detach=True)
