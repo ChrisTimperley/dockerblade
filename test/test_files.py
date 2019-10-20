@@ -15,3 +15,10 @@ def test_isdir(alpine_310):
     files = alpine_310.filesystem()
     assert not files.isdir('/bin/sh')
     assert files.isdir('/bin')
+
+
+def test_islink(alpine_310):
+    files = alpine_310.filesystem()
+    assert files.islink('/sbin/arp')
+    assert not files.islink('/sbin')
+    assert not files.islink('/sbin/ldconfig')
