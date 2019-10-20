@@ -29,3 +29,10 @@ class FileSystem:
         """
         cmd = f'test -e {shlex.quote(path)}'
         return self._shell.run(cmd, stdout=False).returncode == 0
+
+    def isdir(self, path: str) -> bool:
+        """Determines whether a directory exists at a given path.
+        Inspired by :meth:`os.path.dir`.
+        """
+        cmd = f'test -d {shlex.quote(path)}'
+        return self._shell.run(cmd, stdout=False).returncode == 0
