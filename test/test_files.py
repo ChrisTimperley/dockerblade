@@ -22,3 +22,10 @@ def test_islink(alpine_310):
     assert files.islink('/sbin/arp')
     assert not files.islink('/sbin')
     assert not files.islink('/sbin/ldconfig')
+
+
+def test_isfile(alpine_310):
+    files = alpine_310.filesystem()
+    assert files.isfile('/sbin/arp')
+    assert files.isfile('/bin/sh')
+    assert not files.isfile('/bin')
