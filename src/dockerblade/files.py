@@ -8,11 +8,11 @@ import os
 
 import attr
 
+from . import exceptions as exc
+
 if typing.TYPE_CHECKING:
     from .shell import Shell
     from .container import Container
-
-from . import exceptions as exc
 
 
 @attr.s(slots=True)
