@@ -17,6 +17,33 @@ class EnvNotFoundError(DockerBladeException):
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
+class CopyFailed(DockerBladeException):
+    """A copy operation failed unexpectedly."""
+    def __str__(self) -> str:
+        return 'Copy operation failed'
+
+
+@_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
+class HostFileNotFound(DockerBladeException):
+    """No file was found at a given path on the host machine."""
+    path: str
+
+    def __str__(self) -> str:
+        return f'File not found [{self.path}] on host machine'
+
+
+@_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
+class ContainerFileNotFound(DockerBladeException):
+    """No file was found at a given path in a container."""
+    container_id: str
+    path: str
+
+    def __str__(self) -> str:
+        return (f'File not found [{self.path}] '
+                f'in container [{self.container_id}]')
+
+
+@_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
 class CalledProcessError(DockerBladeException):
     """Thrown when a process produces a non-zero return code.
 
