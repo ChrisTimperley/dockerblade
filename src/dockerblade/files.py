@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 __all__ = ('FileSystem',)
 
+from typing import Union, overload
+from typing_extensions import Literal
 import typing
 import shlex
 import subprocess
 import os
 
 import attr
+import tempfile
 
 from . import exceptions as exc
 
@@ -70,6 +73,51 @@ class FileSystem:
             subprocess.check_call(cmd, shell=True)
         except subprocess.CalledProcessError:
             raise exc.CopyFailed
+
+    @overload
+    def read(self, filename: str) -> str:
+        ...
+
+    @overload
+    def read(self, filename: str, binary: Literal[True]) -> bytes:
+        ...
+
+    @overload
+    def read(self, filename: str, binary: Literal[False]) -> str:
+        ...
+
+    def read(self, filename: str, binary: bool = False) -> Union[str, bytes]:
+        """Reads the contents of a given file.
+
+        Parameters
+        ----------
+        filename: str
+            absolute path to the file.
+        binary: bool
+            if :code:`True`, read the binary contents of the file; otherwise,
+            treat the file as a text file.
+
+        Raises
+        ------
+        ContainerFileNotFound
+            if no file exists at the given path.
+        IsADirectoryError
+            if :code:`fn` is a directory.
+        """
+        mode = 'rb' if binary else 'r'
+        if not self.exists(filename):
+            raise exc.ContainerFileNotFound(path=filename,
+                                            container_id=self.container.id)
+        if self.isdir(filename):
+            raise exc.IsADirectoryError(filename)
+
+        _, filename_host_temp = tempfile.mkstemp(suffix='.roswire')
+        try:
+            self.copy_to_host(filename, filename_host_temp)
+            with open(filename_host_temp, mode) as f:
+                return f.read()
+        finally:
+            os.remove(filename_host_temp)
 
     def exists(self, path: str) -> bool:
         """Determines whether a file or directory exists at the given path.

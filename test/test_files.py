@@ -73,3 +73,27 @@ def test_copy_to_host(alpine_310):
             'daily', 'weekly', '15min', 'hourly', 'monthly'}
     finally:
         shutil.rmtree(dir_host)
+
+
+def test_read(alpine_310):
+    files = alpine_310.filesystem()
+    shell = alpine_310.shell()
+    content = 'Hello world!'
+    shell.run(f'echo "{content}" > /tmp/hello')
+
+    # read file
+    expected = content + '\n'
+    assert files.read('/tmp/hello') == expected
+
+    # read binary file
+    binary = files.read('/tmp/hello', binary=True)
+    text = binary.decode('utf-8')
+    assert text == expected
+
+    # non-existent file
+    with pytest.raises(exc.ContainerFileNotFound):
+        files.read('/foo/bar')
+
+    # directory
+    with pytest.raises(exc.IsADirectoryError):
+        files.read('/bin')

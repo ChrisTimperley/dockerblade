@@ -24,6 +24,15 @@ class CopyFailed(DockerBladeException):
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
+class IsADirectoryError(DockerBladeException):
+    """The given path is a directory but a file was expected."""
+    path: str
+
+    def __str__(self) -> str:
+        return f'Directory exists at path where file is expected: {self.path}'
+
+
+@_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
 class HostFileNotFound(DockerBladeException):
     """No file was found at a given path on the host machine."""
     path: str
