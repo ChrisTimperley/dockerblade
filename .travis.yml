@@ -9,6 +9,9 @@ install:
 - pip install --upgrade .
 script:
 - tox
+- pytest --cov=dockerblade
+after_success:
+- coveralls
 notifications:
   email: false
 deploy:
