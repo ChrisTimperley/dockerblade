@@ -75,6 +75,51 @@ def test_copy_to_host(alpine_310):
         shutil.rmtree(dir_host)
 
 
+def test_copy_from_host(alpine_310):
+    shell = alpine_310.shell()
+    files = alpine_310.filesystem()
+
+    content = 'hello world'
+    try:
+        _, fn_host = tempfile.mkstemp()
+        with open(fn_host, 'w') as fh:
+            fh.write(content)
+
+        # copy to non-existent directory
+        with pytest.raises(exc.ContainerFileNotFound):
+            files.copy_from_host(fn_host, '/temp/foo')
+
+        # copy file
+        files.copy_from_host(fn_host, '/tmp/foo')
+        assert files.read('/tmp/foo') == content
+    finally:
+        os.remove(fn_host)
+
+    # copy non-existent file from host
+    assert not os.path.exists(fn_host)
+    with pytest.raises(exc.HostFileNotFound):
+        files.copy_from_host(fn_host, '/tmp/bar')
+
+    # copy directory
+    try:
+        dir_host = tempfile.mkdtemp()
+
+        fn_bar = os.path.join(dir_host, 'bar')
+        with open(fn_bar, 'w') as fh:
+            fh.write(content)
+
+        fn_foo = os.path.join(dir_host, 'foo')
+        with open(fn_foo, 'w') as fh:
+            fh.write(content)
+
+        files.copy_from_host(dir_host, '/tmp/foobardir')
+        assert files.exists('/tmp/foobardir')
+        assert files.exists('/tmp/foobardir/foo')
+        assert files.exists('/tmp/foobardir/bar')
+    finally:
+        shutil.rmtree(dir_host)
+
+
 def test_read(alpine_310):
     files = alpine_310.filesystem()
     shell = alpine_310.shell()

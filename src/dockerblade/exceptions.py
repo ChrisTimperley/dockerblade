@@ -19,8 +19,10 @@ class EnvNotFoundError(DockerBladeException):
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
 class CopyFailed(DockerBladeException):
     """A copy operation failed unexpectedly."""
+    reason: str
+
     def __str__(self) -> str:
-        return 'Copy operation failed'
+        return 'Copy operation failed: {self.reason}'
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)

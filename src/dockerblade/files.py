@@ -30,6 +30,46 @@ class FileSystem:
     container: 'Container' = attr.ib()
     _shell: 'Shell' = attr.ib(repr=False, eq=False, hash=False)
 
+    def copy_from_host(self, path_host: str, path_container: str) -> None:
+        """
+        Copies a given file or directory tree from the host to the container.
+
+        Parameters
+        ----------
+        fn_host: str
+            the file or directory tree that should be copied from the host.
+        fn_container: str
+            the destination path on the container.
+
+        Raises
+        ------
+        ContainerFileNotFound
+            if no file or directory exists at the given path inside the
+            container.
+        HostFileNotFound
+            if the parent directory of the host filepath does not exist.
+        CopyFailed
+            if the copy operation failed.
+        """
+        id_container: str = self.container.id
+        if not os.path.exists(path_host):
+            raise exc.HostFileNotFound(path_host)
+
+        path_container_parent: str = os.path.dirname(path_container)
+        if not os.path.isdir(path_container_parent):
+            raise exc.ContainerFileNotFound(path=path_container_parent,
+                                            container_id=id_container)
+
+        cmd: str = (f"docker cp {shlex.quote(path_host)} "
+                    f"{id_container}:{shlex.quote(path_container)}")
+        try:
+            subprocess.check_call(cmd, shell=True)
+        except subprocess.CalledProcessError:
+            reason = (f"failed to copy file [{path_host}] "
+                      f"from host to container [{id_container}]: "
+                      f"{path_container}")
+            raise exc.CopyFailed(reason)
+
     def copy_to_host(self,
                      path_container: str,
                      path_host: str
@@ -56,15 +96,11 @@ class FileSystem:
         """
         id_container: str = self.container.id
         if not self.exists(path_container):
-            m = (f"file [{path_container}] does not exist in container "
-                 f"[{id_container}]")
             raise exc.ContainerFileNotFound(path=path_container,
                                             container_id=id_container)
 
         path_host_parent: str = os.path.dirname(path_host)
         if not os.path.isdir(path_host_parent):
-            m = (f"directory [{path_host_parent}] "
-                 "does not exist on host machine")
             raise exc.HostFileNotFound(path_host_parent)
 
         cmd: str = (f"docker cp {id_container}:{shlex.quote(path_container)} "
@@ -72,7 +108,10 @@ class FileSystem:
         try:
             subprocess.check_call(cmd, shell=True)
         except subprocess.CalledProcessError:
-            raise exc.CopyFailed
+            reason = (f"failed to copy file [{path_container}] "
+                      f"from container [{id_container}] to host: "
+                      f"{path_host}")
+            raise exc.CopyFailed(reason)
 
     @overload
     def read(self, filename: str) -> str:
