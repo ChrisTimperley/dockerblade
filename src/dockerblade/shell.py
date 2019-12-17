@@ -73,6 +73,7 @@ class Shell:
 
     def _instrument(self,
                     command: str,
+                    *,
                     time_limit: Optional[int] = None,
                     kill_after: int = 1
                     ) -> str:
@@ -107,7 +108,9 @@ class Shell:
     def check_call(self,
                    args: str,
                    *,
-                   cwd: str = '/'
+                   cwd: str = '/',
+                   time_limit: Optional[int] = None,
+                   kill_after: int = 1
                    ) -> None:
         """Executes a given commands, blocks until its completion, and checks
         that the return code is zero.
@@ -126,7 +129,9 @@ class Shell:
                      stderr: bool = True,
                      cwd: str = '/',
                      encoding: str = 'utf-8',
-                     text: Literal[False]
+                     text: Literal[False],
+                     time_limit: Optional[int] = None,
+                     kill_after: int = 1
                      ) -> bytes:
         ...
 
@@ -137,7 +142,9 @@ class Shell:
                      stderr: bool = True,
                      cwd: str = '/',
                      encoding: str = 'utf-8',
-                     text: Literal[True]
+                     text: Literal[True],
+                     time_limit: Optional[int] = None,
+                     kill_after: int = 1
                      ) -> str:
         ...
 
@@ -147,7 +154,9 @@ class Shell:
                      stderr: bool = False,
                      cwd: str = '/',
                      encoding: str = 'utf-8',
-                     text: bool = True
+                     text: bool = True,
+                     time_limit: Optional[int] = None,
+                     kill_after: int = 1
                      ) -> Union[str, bytes]:
         """Executes a given commands, blocks until its completion, and checks
         that the return code is zero.
@@ -179,7 +188,9 @@ class Shell:
             cwd: str = '/',
             text: bool = True,
             stdout: bool = True,
-            stderr: bool = False
+            stderr: bool = False,
+            time_limit: Optional[int] = None,
+            kill_after: int = 1
             ) -> CompletedProcess:
         """Executes a given command and blocks until its completion.
 
@@ -201,6 +212,14 @@ class Shell:
             If :code:`True`, the stderr will be included in the output.
         stdout: bool
             If :code:`True`, the stdout will be included in the output.
+        time_limit: int, optional
+            The maximum number of seconds that the command is allowed to run
+            before being terminated via SIGTERM. If unspecified, no time limit
+            will be imposed on command execution.
+        kill_after: int
+            The maximum number of seconds to wait before sending SIGKILL to
+            the process after attempting termination via SIGTERM. Only applies
+            when :code:`time_limit` is specified.
 
         Returns
         -------
@@ -210,7 +229,9 @@ class Shell:
         logger.debug(f"executing command: {args}")
         no_output = not stdout and not stderr
         docker_container = self.container._docker
-        args_instrumented = self._instrument(args)
+        args_instrumented = self._instrument(args,
+                                             time_limit=time_limit,
+                                             kill_after=kill_after)
 
         with Stopwatch() as timer:
             retcode, output_bin = docker_container.exec_run(
@@ -245,10 +266,14 @@ class Shell:
               *,
               cwd: str = '/',
               stdout: bool = True,
-              stderr: bool = False
+              stderr: bool = False,
+              time_limit: Optional[int] = None,
+              kill_after: int = 1
               ) -> Popen:
         docker_api = self.container.daemon.api
-        args_instrumented = self._instrument(args)
+        args_instrumented = self._instrument(args,
+                                             time_limit=time_limit,
+                                             kill_after=kill_after)
         exec_response = docker_api.exec_create(self.container.id,
                                                args_instrumented,
                                                tty=True,

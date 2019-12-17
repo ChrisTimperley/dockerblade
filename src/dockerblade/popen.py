@@ -129,6 +129,7 @@ class Popen:
         ----------
         time_limit: float, optional
             An optional time limit.
+
         Raises
         ------
         TimeoutExpired:
