@@ -35,6 +35,15 @@ class IsADirectoryError(DockerBladeException):
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
+class IsNotADirectoryError(DockerBladeException):
+    """The given path is not a directory."""
+    path: str
+
+    def __str__(self) -> str:
+        return f'Directory was expected at path: {self.path}'
+
+
+@_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
 class HostFileNotFound(DockerBladeException):
     """No file was found at a given path on the host machine."""
     path: str
@@ -51,6 +60,17 @@ class ContainerFileNotFound(DockerBladeException):
 
     def __str__(self) -> str:
         return (f'File not found [{self.path}] '
+                f'in container [{self.container_id}]')
+
+
+@_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
+class ContainerFileAlreadyExists(DockerBladeException):
+    """A file already exists at a given path inside a container."""
+    container_id: str
+    path: str
+
+    def __str__(self) -> str:
+        return (f'File already exists [{self.path}] '
                 f'in container [{self.container_id}]')
 
 

@@ -158,6 +158,42 @@ class FileSystem:
         finally:
             os.remove(filename_host_temp)
 
+    def makedirs(self, d: str, exist_ok: bool = False) -> None:
+        """
+        Recursively creates a directory at a given path, creating any missing
+        intermediate directories along the way.
+        Inspired by :meth:`os.makedirs`.
+
+        Parameters
+        ----------
+        d: str
+            the path to the directory.
+        exist_ok: bool
+            specifies whether or not an exception should be raised if the
+            given directory already exists.
+
+        Raises
+        ------
+        ContainerFileAlreadyExists
+            if either (a) `exist_ok=False` and a directory already exists at
+            the given path, or (b) a file already exists at the given path.
+        IsNotADirectoryError
+            if the parent directory isn't a directory.
+        """
+        d_parent = os.path.dirname(d)
+        if self.isdir(d) and not exist_ok:
+            raise exc.ContainerFileAlreadyExists(path=d,
+                                                 container_id=self.container.id)  # noqa
+        if self.isfile(d):
+            m = f"file already exists at given path: {d}"
+            raise exc.ContainerFileAlreadyExists(path=d,
+                                                 container_id=self.container.id)  # noqa
+        if self.exists(d_parent) and self.isfile(d_parent):
+            raise exc.IsNotADirectoryError(d_parent)
+
+        command = f'mkdir -p {shlex.quote(d)}'
+        self._shell.check_call(command)
+
     def exists(self, path: str) -> bool:
         """Determines whether a file or directory exists at the given path.
         Inspired by :meth:`os.path.exists`.

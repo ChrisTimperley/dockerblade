@@ -37,6 +37,39 @@ def test_isfile(alpine_310):
     assert not files.isfile('/bin')
 
 
+def test_makedirs(alpine_310):
+    files = alpine_310.filesystem()
+
+    # parent directory exists
+    files.makedirs('/tmp/foo')
+    assert files.isdir('/tmp/foo')
+    files.makedirs('/tmp/foo/bar')
+    assert files.isdir('/tmp/foo/bar')
+
+    # intermediate directory doesn't exist
+    files.makedirs('/tmp/bar/foo')
+    assert files.isdir('/tmp/bar/foo')
+
+    # directory already exists
+    with pytest.raises(exc.ContainerFileAlreadyExists):
+        files.makedirs('/bin')
+    assert files.isdir('/bin')
+    files.makedirs('/bin', exist_ok=True)
+
+    # path is a file
+    with pytest.raises(exc.ContainerFileAlreadyExists):
+        files.makedirs('/bin/cp')
+    with pytest.raises(exc.ContainerFileAlreadyExists):
+        files.makedirs('/bin/dd', exist_ok=True)
+
+    # parent directory is a file
+    with pytest.raises(exc.IsNotADirectoryError):
+        files.makedirs('/bin/cp/foo')
+    assert not files.exists('/bin/cp/foo')
+    assert not files.isdir('/bin/cp')
+    assert files.isfile('/bin/cp')
+
+
 def test_copy_to_host(alpine_310):
     content = "hello world"
     shell = alpine_310.shell()
