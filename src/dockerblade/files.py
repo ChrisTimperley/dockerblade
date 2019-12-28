@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __all__ = ('FileSystem',)
 
-from typing import Union, overload
+from typing import Union, Optional, overload
 from typing_extensions import Literal
 import typing
 import shlex
@@ -221,3 +221,48 @@ class FileSystem:
         """
         cmd = f'test -h {shlex.quote(path)}'
         return self._shell.run(cmd, stdout=False).returncode == 0
+
+    def mktemp(self,
+               suffix: Optional[str] = None,
+               prefix: Optional[str] = None,
+               dirname: Optional[str] = None
+               ) -> str:
+        """Creates a temporary file.
+        Inspired by :class:`tempfile.mktemp`.
+
+        Parameters
+        ----------
+        suffix: str, optional
+            an optional suffix for the filename.
+        prefix: str, optional
+            an optional prefix for the filename.
+        dirname: str, optional
+            if specified, the temporary file will be created in the given
+            directory.
+
+        Raises
+        ------
+        ContainerFileNotFound:
+            if specified directory does not exist.
+
+        Returns
+        -------
+        str
+            The absolute path of the temporary file.
+        """
+        template = shlex.quote(f"{prefix if prefix else 'tmp'}.XXXXXXXXXX")
+        dirname = dirname if dirname else '/tmp'
+        cmd_parts = ('mktemp', template, '-p', shlex.quote(dirname))
+        if not self.isdir(dirname):
+            raise exc.ContainerFileNotFound(path=dirname,
+                                            container_id=self.container.id)
+        command = ' '.join(cmd_parts)
+        filename = self._shell.check_output(command, text=True)
+
+        if suffix:
+            original_filename = filename
+            filename = original_filename + suffix
+            command = f'mv {original_filename} {filename}'
+            self._shell.check_call(command)
+
+        return filename

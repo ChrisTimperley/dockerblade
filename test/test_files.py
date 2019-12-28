@@ -70,6 +70,40 @@ def test_makedirs(alpine_310):
     assert files.isfile('/bin/cp')
 
 
+def test_mktemp(alpine_310):
+    files = alpine_310.filesystem()
+
+    # create a temporary file
+    fn = files.mktemp()
+    assert files.isfile(fn)
+    assert os.path.isabs(fn)
+    assert fn.startswith('/tmp/')
+
+    # use specified dir
+    d = '/boop'
+    files.makedirs(d, exist_ok=True)
+    assert files.isdir(d)
+    fn = files.mktemp(dirname=d)
+    assert os.path.dirname(fn) == d
+    assert files.isfile(fn)
+
+    # use non-existent dir
+    with pytest.raises(exc.ContainerFileNotFound):
+        d = '/idontexist'
+        assert not files.isdir(d)
+        files.mktemp(dirname=d)
+
+    # add suffix
+    fn = files.mktemp(suffix='.foo')
+    assert fn.endswith('.foo')
+    assert files.isfile(fn)
+
+    # add prefix
+    fn = files.mktemp(prefix='foo')
+    assert os.path.basename(fn).startswith('foo')
+    assert files.isfile(fn)
+
+
 def test_copy_to_host(alpine_310):
     content = "hello world"
     shell = alpine_310.shell()
