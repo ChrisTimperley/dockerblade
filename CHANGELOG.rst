@@ -2,6 +2,9 @@ v0.2.1 (????-??-??)
 -------------------
 
 * added time_limit and kill_after to command execution methods in Shell
+* added makedirs to Filesystem
+* added mktemp to Filesystem
+* added remove to Filesystem
 
 
 v0.2.0 (2019-12-17)
