@@ -6,6 +6,8 @@ v0.2.1 (????-??-??)
 * added mktemp to Filesystem
 * added remove to Filesystem
 * added write to Filesystem
+* fixed bug in copy_from_host that prevented files from being copied to the
+  container
 
 
 v0.2.0 (2019-12-17)

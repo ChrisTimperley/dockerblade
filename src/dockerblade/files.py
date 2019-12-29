@@ -56,7 +56,7 @@ class FileSystem:
             raise exc.HostFileNotFound(path_host)
 
         path_container_parent: str = os.path.dirname(path_container)
-        if not os.path.isdir(path_container_parent):
+        if not self.isdir(path_container_parent):
             raise exc.ContainerFileNotFound(path=path_container_parent,
                                             container_id=id_container)
 
