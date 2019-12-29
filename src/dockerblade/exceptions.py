@@ -1,10 +1,23 @@
 # -*- coding: utf-8 -*-
-import typing as t_
+import typing as _t
 import attr as _attr
 
 
 class DockerBladeException(Exception):
     """Used by all exceptions that are thrown by DockerBlade."""
+
+
+@_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
+class UnexpectedError(DockerBladeException):
+    """An unexpected error occurred during an operation."""
+    description: str
+    error: _t.Optional['CalledProcessError'] = _attr.ib(default=None)
+
+    def __str__(self) -> str:
+        msg = f"An unexpected error occurred: {self.description}"
+        if self.error:
+            msg += f' ({self.error})'
+        return msg
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
@@ -92,7 +105,7 @@ class CalledProcessError(DockerBladeException):
     cmd: str
     returncode: int
     duration: float
-    output: t_.Optional[t_.Union[str, bytes]]
+    output: _t.Optional[_t.Union[str, bytes]]
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)

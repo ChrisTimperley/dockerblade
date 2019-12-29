@@ -10,6 +10,25 @@ from common import alpine_310
 from dockerblade import exceptions as exc
 
 
+def test_remove(alpine_310):
+    files = alpine_310.filesystem()
+
+    filename = files.mktemp()
+    assert files.isfile(filename)
+    files.remove(filename)
+    assert not files.exists(filename)
+
+    # remove non-existent file
+    with pytest.raises(exc.ContainerFileNotFound):
+        files.remove(filename)
+
+    # remove directory
+    assert files.isdir('/bin')
+    with pytest.raises(exc.IsADirectoryError):
+        files.remove('/bin')
+    assert files.isdir('/bin')
+
+
 def test_exists(alpine_310):
     files = alpine_310.filesystem()
     assert files.exists('/bin/sh')

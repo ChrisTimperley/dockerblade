@@ -113,6 +113,35 @@ class FileSystem:
                       f"{path_host}")
             raise exc.CopyFailed(reason)
 
+    def remove(self, filename: str) -> None:
+        """Removes a given file.
+        Inspired by :meth:`os.remove`.
+
+        Warning
+        -------
+        Does not handle permissions errors.
+
+        Raises
+        ------
+        ContainerFileNotFoundError
+            if the given file does not exist.
+        IsADirectoryError
+            if the given path is a directory.
+        UnexpectedError
+            if an unexpected failure occurs.
+        """
+        command = f'rm {shlex.quote(filename)}'
+        try:
+            self._shell.check_call(command)
+        except exc.CalledProcessError as error:
+            if not self.exists(filename):
+                raise exc.ContainerFileNotFound(path=filename,
+                                                container_id=self.container.id)
+            elif self.isdir(filename):
+                raise exc.IsADirectoryError(path=filename)
+
+            raise exc.UnexpectedError('failed to remove', error)
+
     @overload
     def read(self, filename: str) -> str:
         ...
