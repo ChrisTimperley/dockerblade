@@ -10,6 +10,26 @@ from common import alpine_310
 from dockerblade import exceptions as exc
 
 
+def test_write(alpine_310):
+    files = alpine_310.filesystem()
+
+    # write to new file
+    expected = 'hello world'
+    files.write('/tmp/foo', expected)
+    assert files.isfile('/tmp/foo')
+    assert files.read('/tmp/foo') == expected
+
+    # overwrite existing file
+    expected = 'goodbye world'
+    files.write('/tmp/foo', expected)
+    assert files.read('/tmp/foo') == expected
+    files.remove('/tmp/foo')
+
+    # write to a file that belongs to a non-existent directory
+    with pytest.raises(exc.ContainerFileNotFound):
+        files.write('/tmp/bar/bork', 'code things')
+
+
 def test_remove(alpine_310):
     files = alpine_310.filesystem()
 

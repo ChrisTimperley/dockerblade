@@ -5,6 +5,7 @@ v0.2.1 (????-??-??)
 * added makedirs to Filesystem
 * added mktemp to Filesystem
 * added remove to Filesystem
+* added write to Filesystem
 
 
 v0.2.0 (2019-12-17)
