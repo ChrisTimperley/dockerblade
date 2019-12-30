@@ -1,4 +1,4 @@
-v0.2.1 (????-??-??)
+v0.2.1 (2019-12-30)
 -------------------
 
 * added time_limit and kill_after to command execution methods in Shell
