@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 __all__ = ('FileSystem',)
 
-from typing import Union, Optional, overload
+from typing import Union, Optional, overload, Iterator
 from typing_extensions import Literal
+import contextlib
+import logging
 import typing
 import shlex
 import subprocess
@@ -16,6 +18,9 @@ from . import exceptions as exc
 if typing.TYPE_CHECKING:
     from .shell import Shell
     from .container import Container
+
+logger: logging.Logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 @attr.s(slots=True)
@@ -320,3 +325,30 @@ class FileSystem:
             self._shell.check_call(command)
 
         return filename
+
+    @contextlib.contextmanager
+    def tempfile(self,
+                 suffix: Optional[str] = None,
+                 prefix: Optional[str] = None,
+                 dirname: Optional[str] = None
+                 ) -> Iterator[str]:
+        """Creates a temporary file within a context.
+
+        Upon exiting the context, the temporary file will be destroyed.
+        Inspired by :class:`tempfile.TemporaryFile`.
+
+        Note
+        ----
+        Accepts the same arguments as :meth:`mktemp`.
+
+        Yields
+        ------
+        str
+            The absolute path of the temporary file.
+        """
+        filename = self.mktemp(suffix=suffix, prefix=prefix, dirname=dirname)
+        yield filename
+        try:
+            self.remove(filename)
+        except exc.ContainerFileNotFound:
+            logger.debug('temporary file already destroyed: %s', filename)

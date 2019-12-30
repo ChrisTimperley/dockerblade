@@ -2,10 +2,11 @@ v0.2.1 (????-??-??)
 -------------------
 
 * added time_limit and kill_after to command execution methods in Shell
-* added makedirs to Filesystem
-* added mktemp to Filesystem
-* added remove to Filesystem
-* added write to Filesystem
+* added makedirs to FileSystem
+* added mktemp to FileSystem
+* added remove to FileSystem
+* added write to FileSystem
+* added tempfile method to FileSystem
 * fixed bug in copy_from_host that prevented files from being copied to the
   container
 

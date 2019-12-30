@@ -30,6 +30,14 @@ def test_write(alpine_310):
         files.write('/tmp/bar/bork', 'code things')
 
 
+def test_tempfile(alpine_310):
+    files = alpine_310.filesystem()
+    filename: str
+    with files.tempfile() as filename:
+        assert files.isfile(filename)
+    assert not files.exists(filename)
+
+
 def test_remove(alpine_310):
     files = alpine_310.filesystem()
 
