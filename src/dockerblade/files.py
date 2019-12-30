@@ -281,6 +281,48 @@ class FileSystem:
         cmd = f'test -h {shlex.quote(path)}'
         return self._shell.run(cmd, stdout=False).returncode == 0
 
+    def patch(self, context: str, diff: str) -> None:
+        """Attempts to atomically apply a given patch to the filesystem.
+
+        Note that this operation is atomic: That is, the patch will either
+        be applied in its entirety and the method will return :code:`None`,
+        or no changes will be applied to the filesystem and an exception
+        will be thrown.
+
+        Parameters
+        ----------
+        context: str
+            The file or directory to which the patch should be applied.
+        diff: str
+            The contents of patch, given in a unified diff format.
+
+        Raises
+        ------
+        ValueError
+            If the given context is not an absolute path.
+        CalledProcessError
+            If an error occurred during the application of the patch.
+        ContainerFileNotFoundError
+            If the given context is neither a file or directory.
+        """
+        if not os.path.isabs(context):
+            raise ValueError("context must be supplied as an absolute path")
+
+        with self.tempfile(suffix='.diff') as fn_diff:
+            self.write(fn_diff, diff)
+
+            safe_context = shlex.quote(context)
+            safe_fn_diff = shlex.quote(fn_diff)
+            if self.isdir(context):
+                cmd = f'patch -u -p0 -f -i {safe_fn_diff} -d {safe_context}'
+            elif self.isfile(context):
+                cmd = f'patch -u -f -i {safe_fn_diff} {safe_context}'
+            else:
+                raise exc.ContainerFileNotFound(path=context,
+                                                container_id=self.container.id)  # noqa
+
+            self._shell.check_call(cmd)
+
     def mktemp(self,
                suffix: Optional[str] = None,
                prefix: Optional[str] = None,
