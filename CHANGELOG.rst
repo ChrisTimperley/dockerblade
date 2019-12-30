@@ -9,6 +9,7 @@ v0.2.1 (????-??-??)
 * added tempfile method to FileSystem
 * fixed bug in copy_from_host that prevented files from being copied to the
   container
+* implemented provision method in Daemon
 
 
 v0.2.0 (2019-12-17)

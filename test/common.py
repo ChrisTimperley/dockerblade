@@ -11,10 +11,6 @@ def alpine_310():
     with ExitStack() as exit_stack:
         daemon = dockerblade.DockerDaemon()
         exit_stack.push(daemon)
-
-        docker_client = daemon.client
-        docker_container = \
-            docker_client.containers.run('alpine:3.10', stdin_open=True, detach=True)
-        container = daemon.attach(docker_container.id)
+        container = daemon.provision('alpine:3.10')
         exit_stack.callback(container.remove)
         yield container
