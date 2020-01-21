@@ -2,6 +2,7 @@
 __all__ = ('Container',)
 
 import typing
+from typing import Optional
 
 import attr
 from docker.models.containers import Container as DockerContainer
@@ -35,3 +36,9 @@ class Container:
     def remove(self, force: bool = True) -> None:
         """Removes this Docker container."""
         self._docker.remove(force=force)
+
+    @property
+    def ip_address(self) -> Optional[str]:
+        """The local IP address, if any, assigned to this container."""
+        docker_info = self.daemon.api.inspect_container(self.id)
+        return docker_info['NetworkSettings'].get('IPAddress', None)
