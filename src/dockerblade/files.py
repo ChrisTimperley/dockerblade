@@ -271,12 +271,28 @@ class FileSystem:
 
         Raises
         ------
-        CalledProcessError
-            If an error occurred during the find operation.
+        ContainerFileNotFound
+            If the given path belongs to a file.
+        IsNotADirectoryError
+            If the given path is not a directory.
+        UnexpectedError
+            If an unexpected error occurred during the find operation.
         """
         # TODO execute as root
-        command = f'find {shlex.quote(path)} -name {shlex.quote(filename)}'
-        output = self._shell.check_output(command, text=True)
+        path_escaped = shlex.quote(path)
+        command = (f'test ! -e {path_escaped} && exit 50 || '
+                   f'test ! -d {path_escaped} && exit 51 || '
+                   f'find {path_escaped} -name {shlex.quote(filename)}')
+        try:
+            output = self._shell.check_output(command, text=True)
+        except exc.CalledProcessError as error:
+            if error.returncode == 50:
+                raise exc.ContainerFileNotFound(path=path,
+                                                container_id=self.container.id) from error  # noqa
+            if error.returncode == 51:
+                raise exc.IsNotADirectoryError(path=path) from error
+            raise exc.UnexpectedError('find failed', error=error) from error
+
         paths: List[str] = output.replace('\r', '').split('\n')
         return paths
 

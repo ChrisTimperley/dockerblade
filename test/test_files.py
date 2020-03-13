@@ -368,3 +368,10 @@ def test_find(alpine_310):
     files = alpine_310.filesystem()
     assert len(files.find('/etc', '*.d')) == 14
     assert all(fn.startswith('/etc/') for fn in files.find('/etc/', '*.d'))
+
+    # search from non-existent file/dir
+    with pytest.raises(exc.ContainerFileNotFound):
+        files.find('/awesome', 'foo')
+
+    with pytest.raises(exc.IsNotADirectoryError):
+        files.find('/etc/hosts', 'foo')
