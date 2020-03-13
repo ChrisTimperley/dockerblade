@@ -256,3 +256,9 @@ def test_read(alpine_310):
     # directory
     with pytest.raises(exc.IsADirectoryError):
         files.read('/bin')
+
+
+def test_find(alpine_310):
+    files = alpine_310.filesystem()
+    assert len(files.find('/etc', '*.d')) == 14
+    assert all(fn.startswith('/etc/') for fn in files.find('/etc/', '*.d'))

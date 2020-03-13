@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __all__ = ('FileSystem',)
 
-from typing import Union, Optional, overload, Iterator
+from typing import Iterator, Union, List, Optional, overload
 from typing_extensions import Literal
 import contextlib
 import logging
@@ -216,6 +216,34 @@ class FileSystem:
                 return f.read()
         finally:
             os.remove(filename_host_temp)
+
+    def find(self, path: str, filename: str) -> List[str]:
+        """
+        Returns a list of files that match a provided filename in a given
+        directory, recursively.
+
+        Parameters
+        ----------
+        path: str
+            absolute path to the directory.
+        filename: str
+            the name of the file to match.
+
+        Returns
+        -------
+        List[str]
+            A list of matching files, given by their absolute paths.
+
+        Raises
+        ------
+        CalledProcessError
+            If an error occurred during the find operation.
+        """
+        # TODO execute as root
+        command = f'find {shlex.quote(path)} -name {shlex.quote(filename)}'
+        output = self._shell.check_output(command, text=True)
+        paths: List[str] = output.replace('\r', '').split('\n')
+        return paths
 
     def makedirs(self, d: str, exist_ok: bool = False) -> None:
         """
