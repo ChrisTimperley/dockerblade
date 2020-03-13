@@ -1,7 +1,9 @@
 v0.2.4 (????-??-??)
 -------------------
 
-* added `persist` method to Container
+* added `persist` method to `Container`
+* added `pid` property `Container`
+* added `_info` property to `Container`
 
 
 v0.2.3 (2020-01-22)

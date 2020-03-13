@@ -2,7 +2,7 @@
 __all__ = ('Container',)
 
 import typing
-from typing import Optional
+from typing import Any, Mapping, Optional
 
 import attr
 from docker.models.containers import Container as DockerContainer
@@ -16,14 +16,31 @@ if typing.TYPE_CHECKING:
 
 @attr.s(slots=True, frozen=True)
 class Container:
-    """Provides access to a Docker container."""
+    """Provides access to a Docker container.
+
+    Attributes
+    ----------
+    daemon: DockerDaemon
+        Provides access to the Docker daemon that manages this container.
+    id: str
+        The unique ID of the container.
+    pid: int
+        The PID of the container process on the host machine.
+    """
     daemon: 'DockerDaemon' = attr.ib()
     _docker: DockerContainer = \
         attr.ib(repr=False, eq=False, hash=False)
     id: str = attr.ib(init=False, repr=True)
+    pid: int = attr.ib(init=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         object.__setattr__(self, 'id', self._docker.id)
+        object.__setattr__(self, 'pid', int(self._info['State']['Pid']))
+
+    @property
+    def _info(self) -> Mapping[str, Any]:
+        """Retrieves information about this container from Docker."""
+        return self.daemon.api.inspect_container(self.id)
 
     def shell(self, path: str = '/bin/sh') -> Shell:
         """Constructs a shell for this Docker container."""
@@ -60,5 +77,4 @@ class Container:
     @property
     def ip_address(self) -> Optional[str]:
         """The local IP address, if any, assigned to this container."""
-        docker_info = self.daemon.api.inspect_container(self.id)
-        return docker_info['NetworkSettings'].get('IPAddress', None)
+        return self._info['NetworkSettings'].get('IPAddress', None)
