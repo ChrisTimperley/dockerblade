@@ -2,7 +2,7 @@
 __all__ = ('Container',)
 
 import typing
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, Sequence
 
 import attr
 from docker.models.containers import Container as DockerContainer
@@ -45,12 +45,15 @@ class Container:
     def shell(self,
               path: str = '/bin/sh',
               *,
+              sources: Optional[Sequence[str]] = None,
               environment: Optional[Mapping[str, str]] = None
               ) -> Shell:
         """Constructs a shell for this Docker container."""
         if not environment:
             environment = {}
-        return Shell(self, path, environment)
+        if not sources:
+            sources = tuple()
+        return Shell(self, path, sources=sources, environment=environment)
 
     def filesystem(self) -> FileSystem:
         """Provides access to the filesystem for this container."""

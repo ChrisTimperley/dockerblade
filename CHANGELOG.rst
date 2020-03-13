@@ -1,4 +1,4 @@
-v0.2.4 (????-??-??)
+v0.3.0 (????-??-??)
 -------------------
 
 * added `persist` method to `Container`
@@ -7,6 +7,8 @@ v0.2.4 (????-??-??)
 * added `find` method to `FileSystem`
 * added ability to specify an environment via `environment` argument of
   `shell` method in `Container`
+* added ability to construct a shell using sources via `sources` argument
+  of `shell` method in `Container
 
 
 v0.2.3 (2020-01-22)

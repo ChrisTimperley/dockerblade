@@ -45,6 +45,15 @@ def test_environ(alpine_310):
     assert shell.environ('NAME') == 'CHRIS'
 
 
+def test_sources(alpine_310):
+    # create a file that will be sourced
+    files = alpine_310.filesystem()
+    files.write('/tmp/source.sh', 'export NAME="dockerblade"')
+
+    shell = alpine_310.shell('/bin/sh', sources=['/tmp/source.sh'])
+    assert shell.environ('NAME') == 'dockerblade'
+
+
 def test_popen(alpine_310):
     shell = alpine_310.shell('/bin/sh')
     id_container = shell.container.id

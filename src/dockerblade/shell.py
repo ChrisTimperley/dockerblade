@@ -2,7 +2,7 @@
 __all__ = ('Shell', 'CompletedProcess', 'CalledProcessError')
 
 import typing
-from typing import Tuple, Optional, overload, Mapping, Union
+from typing import Dict, Sequence, Tuple, Optional, overload, Mapping, Union
 from typing_extensions import Literal
 import shlex
 
@@ -70,7 +70,30 @@ class Shell:
     """
     container: 'Container' = attr.ib()
     path: str = attr.ib()
+    _sources: Sequence[str] = attr.ib(factory=tuple)
     _environment: Mapping[str, str] = attr.ib(factory=dict)
+
+    def __attrs_post_init__(self) -> None:
+        object.__setattr__(self, 'sources', tuple(self._sources))
+
+        if self._sources:
+            command = ' && '.join([f'. {src} > /dev/null 2> /dev/null' for src in self._sources])  # noqa
+            command += ' && env'
+        else:
+            command = 'env'
+
+        # store the state of the environment
+        env: Dict[str, str] = {}
+        env_output = self.check_output(command, text=True)
+        for env_line in env_output.replace('\r', '').split('\n'):
+            name, separator, value = env_line.partition('=')
+            env[name] = value
+
+        # ignore the PWD variable
+        if 'PWD' in env:
+            del env['PWD']
+
+        object.__setattr__(self, '_environment', env)
 
     def _instrument(self,
                     command: str,
