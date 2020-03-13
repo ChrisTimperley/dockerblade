@@ -48,6 +48,15 @@ class IsADirectoryError(DockerBladeException):
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
+class DirectoryNotEmpty(DockerBladeException):
+    """A given directory is not empty."""
+    path: str
+
+    def __str__(self) -> str:
+        return f'Directory is not empty: {self.path}'
+
+
+@_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
 class IsNotADirectoryError(DockerBladeException):
     """The given path is not a directory."""
     path: str

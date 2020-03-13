@@ -82,6 +82,34 @@ def test_mkdir(alpine_310):
     assert files.isfile('/etc/hosts')
 
 
+def test_rmdir(alpine_310):
+    files = alpine_310.filesystem()
+
+    # create and remove an empty directory
+    files.mkdir('/tmp/foo')
+    assert 'foo' in files.listdir('/tmp')
+    assert files.isdir('/tmp/foo')
+    files.rmdir('/tmp/foo')
+    assert not files.exists('/tmp/foo')
+
+    # remove a file
+    assert files.isfile('/etc/hosts')
+    with pytest.raises(exc.IsNotADirectoryError):
+        files.rmdir('/etc/hosts')
+    assert files.isfile('/etc/hosts')
+
+    # remove a non-existent file/directory
+    assert not files.exists('/tmp/bar')
+    with pytest.raises(exc.ContainerFileNotFound):
+        files.rmdir('/tmp/bar')
+
+    # remove a non-empty directory
+    assert files.isdir('/etc')
+    with pytest.raises(exc.DirectoryNotEmpty):
+        files.rmdir('/etc')
+    assert files.isdir('/etc')
+
+
 def test_exists(alpine_310):
     files = alpine_310.filesystem()
     assert files.exists('/bin/sh')

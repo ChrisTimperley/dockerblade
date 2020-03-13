@@ -128,7 +128,7 @@ class FileSystem:
 
         Raises
         ------
-        ContainerFileNotFoundError
+        ContainerFileNotFound
             if the given file does not exist.
         IsADirectoryError
             if the given path is a directory.
@@ -145,7 +145,42 @@ class FileSystem:
             elif self.isdir(filename):
                 raise exc.IsADirectoryError(path=filename)
 
-            raise exc.UnexpectedError('failed to remove', error)
+            raise exc.UnexpectedError('failed to remove', error) from error
+
+    def rmdir(self, directory: str) -> None:
+        """Removes a given directory.
+        Inspired by :meth:`os.rmdir`.
+
+        Warning
+        -------
+        Does not handle permissions errors.
+
+        Raises
+        ------
+        ContainerFileNotFound
+            if the given directory does not exist.
+        IsNotADirectoryError
+            if the given path is not a directory.
+        OSError
+            if the given directory is not empty.
+        UnexpectedError
+            an unexpected failure occurred.
+        """
+        escaped_directory = shlex.quote(directory)
+        command = (f'test -e {escaped_directory} || exit 50 && '
+                   f'test -d {escaped_directory} || exit 51 && '
+                   f'rmdir {escaped_directory}')
+        try:
+            self._shell.check_output(command, text=True)
+        except exc.CalledProcessError as error:
+            if error.returncode == 50:
+                raise exc.ContainerFileNotFound(path=directory,
+                                                container_id=self.container.id)
+            if error.returncode == 51:
+                raise exc.IsNotADirectoryError(path=directory)
+            if error.output and 'Directory not empty' in error.output:
+                raise exc.DirectoryNotEmpty(path=directory) from error
+            raise exc.UnexpectedError('failed to remove directory', error) from error  # noqa
 
     def write(self, filename: str, contents: Union[str, bytes]) -> None:
         """Writes to a given file.
