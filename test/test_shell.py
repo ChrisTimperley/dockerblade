@@ -40,6 +40,10 @@ def test_environ(alpine_310):
     shell = alpine_310.shell('/bin/sh')
     assert shell.environ('PATH') == '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
+    env = {'NAME': 'CHRIS'}
+    shell = alpine_310.shell('/bin/sh', environment=env)
+    assert shell.environ('NAME') == 'CHRIS'
+
 
 def test_popen(alpine_310):
     shell = alpine_310.shell('/bin/sh')

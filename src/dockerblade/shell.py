@@ -2,7 +2,7 @@
 __all__ = ('Shell', 'CompletedProcess', 'CalledProcessError')
 
 import typing
-from typing import Tuple, Optional, Union, overload
+from typing import Tuple, Optional, overload, Mapping, Union
 from typing_extensions import Literal
 import shlex
 
@@ -57,19 +57,20 @@ class CompletedProcess:
 @attr.s(eq=False, hash=False)
 class Shell:
     """Provides shell access to a Docker container.
-    Do not directly call the constructor to create shells. Instead, you
-    should use a :class:`ShellFactory` to build shells.
+    Do not directly call the constructor to create shells. Instead, use the
+    :method:`shell` method of :class:`Container` to build a shell.
 
     Attributes
     ----------
-    container_name: str
-        The name of the container to which the shell is attached.
+    container: Container
+        The container to which the shell is attached.
     path: str
         The absolute path to the binary (inside the container) that should be
         used to provide this shell.
     """
     container: 'Container' = attr.ib()
     path: str = attr.ib()
+    _environment: Mapping[str, str] = attr.ib(factory=dict)
 
     def _instrument(self,
                     command: str,
@@ -237,6 +238,7 @@ class Shell:
             retcode, output_bin = docker_container.exec_run(
                 args_instrumented,
                 detach=False,
+                environment=self._environment,
                 tty=True,
                 stream=False,
                 socket=False,
@@ -276,6 +278,7 @@ class Shell:
                                              kill_after=kill_after)
         exec_response = docker_api.exec_create(self.container.id,
                                                args_instrumented,
+                                               environment=self._environment,
                                                tty=True,
                                                workdir=cwd,
                                                stdout=stdout,

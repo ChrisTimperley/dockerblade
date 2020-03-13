@@ -42,9 +42,15 @@ class Container:
         """Retrieves information about this container from Docker."""
         return self.daemon.api.inspect_container(self.id)
 
-    def shell(self, path: str = '/bin/sh') -> Shell:
+    def shell(self,
+              path: str = '/bin/sh',
+              *,
+              environment: Optional[Mapping[str, str]] = None
+              ) -> Shell:
         """Constructs a shell for this Docker container."""
-        return Shell(self, path)
+        if not environment:
+            environment = {}
+        return Shell(self, path, environment)
 
     def filesystem(self) -> FileSystem:
         """Provides access to the filesystem for this container."""

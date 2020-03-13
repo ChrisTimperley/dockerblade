@@ -5,6 +5,8 @@ v0.2.4 (????-??-??)
 * added `pid` property `Container`
 * added `_info` property to `Container`
 * added `find` method to `FileSystem`
+* added ability to specify an environment via `environment` argument of
+  `shell` method in `Container`
 
 
 v0.2.3 (2020-01-22)
