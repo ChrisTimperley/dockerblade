@@ -37,6 +37,26 @@ class Container:
         """Removes this Docker container."""
         self._docker.remove(force=force)
 
+    def persist(self,
+                repository: Optional[str] = None,
+                tag: Optional[str] = None
+                ) -> str:
+        """Persists this container to an image.
+
+        Parameters
+        ----------
+        repository: str, optional
+            The name of the repository to which the image should belong.
+        tag: str, optional
+            The tag that should be used for the image.
+
+        Returns
+        -------
+        str
+            The ID of the generated image.
+        """
+        return self._docker.commit(repository, tag).id
+
     @property
     def ip_address(self) -> Optional[str]:
         """The local IP address, if any, assigned to this container."""
