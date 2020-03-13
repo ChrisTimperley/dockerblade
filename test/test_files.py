@@ -64,6 +64,59 @@ def test_exists(alpine_310):
     assert not files.exists('/bin/foobar')
 
 
+def test_listdir(alpine_310):
+    files = alpine_310.filesystem()
+    expected = [
+        'alpine-release',
+        'apk',
+        'conf.d',
+        'crontabs',
+        'fstab',
+        'group',
+        'hostname',
+        'hosts',
+        'init.d',
+        'inittab',
+        'issue',
+        'logrotate.d',
+        'modprobe.d',
+        'modules',
+        'modules-load.d',
+        'motd',
+        'mtab',
+        'network',
+        'opt',
+        'os-release',
+        'passwd',
+        'periodic',
+        'profile',
+        'profile.d',
+        'protocols',
+        'resolv.conf',
+        'securetty',
+        'services',
+        'shadow',
+        'shells',
+        'ssl',
+        'sysctl.conf',
+        'sysctl.d',
+        'udhcpd.conf'
+    ]
+    assert files.listdir('/etc') == expected
+    
+    # not a directory
+    with pytest.raises(exc.IsNotADirectoryError):
+        files.listdir('/etc/services')
+    
+    # not a file or directory
+    with pytest.raises(exc.ContainerFileNotFound):
+        files.listdir('/tmp/idontexist')
+    
+    # abs
+    expected = [os.path.join('/etc', p) for p in expected]
+    assert files.listdir('/etc', absolute=True) == expected
+
+
 def test_isdir(alpine_310):
     files = alpine_310.filesystem()
     assert not files.isdir('/bin/sh')

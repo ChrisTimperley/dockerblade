@@ -288,6 +288,50 @@ class FileSystem:
         cmd = f'test -e {shlex.quote(path)}'
         return self._shell.run(cmd, stdout=False).returncode == 0
 
+    def listdir(self,
+                directory: str,
+                *,
+                absolute: bool = False
+                ) -> List[str]:
+        """Returns a list of the files belonging to a given directory.
+        Inspired by :meth:`os.listdir`.
+
+        Parameters
+        ----------
+        directory: str
+            absolute path to the directory.
+        absolute: bool
+            if :code:`True`, returns a list of absolute paths;
+            if :code:`False`, returns a list of relative paths.
+
+        Raises
+        ------
+        exceptions.IsNotADirectoryError
+            if the given path isn't a directory.
+        exceptions.ContainerFileNotFound
+            if the given path is not a file or directory.
+        exceptions.CalledProcessError
+            if an unexpected error occurred during execution of this command
+        """
+        directory_escaped = shlex.quote(directory)
+        command = (f'test -e {directory_escaped} || exit 50 && '
+                   f'test -d {directory_escaped} || exit 51 && '
+                   f'ls --color=never -A -1 {directory_escaped}')
+        try:
+            output = self._shell.check_output(command, text=True)
+        except exc.CalledProcessError as error:
+            if error.returncode == 50:
+                raise exc.ContainerFileNotFound(path=directory,
+                                                container_id=self.container.id)  # noqa
+            if error.returncode == 51:
+                raise exc.IsNotADirectoryError(path=directory)
+            raise
+
+        paths: List[str] = output.replace('\r', '').split('\n')
+        if absolute:
+            paths = [os.path.join(directory, p) for p in paths]
+        return paths
+
     def isfile(self, path: str) -> bool:
         """Determines whether a regular file exists at a given path.
         Inspired by :meth:`os.path.isfile`.
