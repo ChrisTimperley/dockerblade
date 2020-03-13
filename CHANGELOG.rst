@@ -6,6 +6,7 @@ v0.3.0 (????-??-??)
 * added `_info` property to `Container`
 * added `find` method to `FileSystem`
 * added `listdir` method to `FileSystem`
+* added `mkdir` method to `FileSystem`
 * added ability to specify an environment via `environment` argument of
   `shell` method in `Container`
 * added ability to construct a shell using sources via `sources` argument

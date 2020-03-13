@@ -272,7 +272,6 @@ class FileSystem:
             raise exc.ContainerFileAlreadyExists(path=d,
                                                  container_id=self.container.id)  # noqa
         if self.isfile(d):
-            m = f"file already exists at given path: {d}"
             raise exc.ContainerFileAlreadyExists(path=d,
                                                  container_id=self.container.id)  # noqa
         if self.exists(d_parent) and self.isfile(d_parent):
@@ -287,6 +286,44 @@ class FileSystem:
         """
         cmd = f'test -e {shlex.quote(path)}'
         return self._shell.run(cmd, stdout=False).returncode == 0
+
+    def mkdir(self, directory: str) -> None:
+        """Creates a directory at a given path.
+        Inspired by :meth:`os.mkdir`.
+
+        Raises
+        ------
+        IsNotADirectoryError
+            if the parent directory isn't a directory.
+        ContainerFileNotFound
+            if the parent directory doesn't exist.
+        ContainerFileAlreadyExists
+            if a file or directory already exist at the given path.
+        UnexpectedError
+            if an unexpected error occurred.
+        """
+        directory_escaped = shlex.quote(directory)
+        directory_parent = os.path.dirname(directory)
+        directory_parent_escaped = shlex.quote(directory_parent)
+        command = (f"test -e {directory_escaped} && exit 50 || "
+                   f"test ! -e {directory_parent_escaped} && exit 51 || "
+                   f"test ! -d {directory_parent_escaped} && exit 52 || "
+                   f"mkdir {directory_escaped}")
+
+        try:
+            self._shell.check_call(command)
+        except exc.CalledProcessError as error:
+            if error.returncode == 50:
+                raise exc.ContainerFileAlreadyExists(
+                    path=directory,
+                    container_id=self.container.id) from error
+            if error.returncode == 51:
+                raise exc.ContainerFileNotFound(
+                    path=directory_parent,
+                    container_id=self.container.id) from error
+            if error.returncode == 52:
+                raise exc.IsNotADirectoryError(directory_parent) from error
+            raise exc.UnexpectedError('mkdir failed', error) from error
 
     def listdir(self,
                 directory: str,

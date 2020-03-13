@@ -57,6 +57,31 @@ def test_remove(alpine_310):
     assert files.isdir('/bin')
 
 
+def test_mkdir(alpine_310):
+    files = alpine_310.filesystem()
+    files.mkdir('/tmp/cool')
+    assert files.isdir('/tmp/cool')
+    assert 'cool' in files.listdir('/tmp')
+    
+    # directory already exists
+    with pytest.raises(exc.ContainerFileAlreadyExists):
+        files.mkdir('/tmp/cool')
+    assert files.isdir('/tmp/cool')
+    
+    # intermediate directory doesn't exist
+    with pytest.raises(exc.ContainerFileNotFound):
+        files.mkdir('/tmp/foo/bar')
+    assert not files.isdir('/tmp/foo/bar')
+    assert not files.isdir('/tmp/foo')
+    
+    # parent directory is a file
+    with pytest.raises(exc.IsNotADirectoryError):
+        files.mkdir('/etc/hosts/cool')
+    assert not files.exists('/etc/hosts/cool')
+    assert not files.isdir('/etc/hosts/cool')
+    assert files.isfile('/etc/hosts')
+
+
 def test_exists(alpine_310):
     files = alpine_310.filesystem()
     assert files.exists('/bin/sh')
