@@ -8,7 +8,9 @@ v0.3.0 (????-??-??)
 * added ability to specify an environment via `environment` argument of
   `shell` method in `Container`
 * added ability to construct a shell using sources via `sources` argument
-  of `shell` method in `Container
+  of `shell` method in `Container`
+* optimised implementation of `environ` method in `Shell` by removing the
+  need to interact with the underlying container
 
 
 v0.2.3 (2020-01-22)

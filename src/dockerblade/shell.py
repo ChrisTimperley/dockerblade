@@ -125,8 +125,8 @@ class Shell:
             if no environment variable exists with the given name.
         """
         try:
-            return self.check_output(f'echo "${{{var}}}"', text=True)
-        except CalledProcessError as exc:
+            return self._environment[var]
+        except KeyError as exc:
             raise EnvNotFoundError(var) from exc
 
     def check_call(self,
