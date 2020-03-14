@@ -1,4 +1,4 @@
-v0.3.0 (????-??-??)
+v0.3.0 (2020-03-13)
 -------------------
 
 * added `persist` method to `Container`
@@ -7,6 +7,7 @@ v0.3.0 (????-??-??)
 * added `find` method to `FileSystem`
 * added `listdir` method to `FileSystem`
 * added `mkdir` method to `FileSystem`
+* added `rmdir` method to `FileSystem`
 * added ability to specify an environment via `environment` argument of
   `shell` method in `Container`
 * added ability to construct a shell using sources via `sources` argument
