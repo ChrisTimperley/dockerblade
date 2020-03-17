@@ -308,6 +308,7 @@ class Shell:
                                                stderr=stderr)
         exec_id = exec_response['Id']
         exec_stream = docker_api.exec_start(exec_id, stream=True)
+        logger.debug(f'started Exec [{exec_id}] for Popen')
         return Popen(args=args,
                      cwd=cwd,
                      container=self.container,

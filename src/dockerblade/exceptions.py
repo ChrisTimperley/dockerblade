@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import typing as _t
 import attr as _attr
+import subprocess as _subprocess
 
 
 class DockerBladeException(Exception):
@@ -97,7 +98,7 @@ class ContainerFileAlreadyExists(DockerBladeException):
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
-class CalledProcessError(DockerBladeException):
+class CalledProcessError(DockerBladeException, _subprocess.CalledProcessError):
     """Thrown when a process produces a non-zero return code.
 
     Attributes
@@ -118,7 +119,7 @@ class CalledProcessError(DockerBladeException):
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
-class TimeoutExpired(DockerBladeException):
+class TimeoutExpired(DockerBladeException, _subprocess.TimeoutExpired):
     """Thrown when a timeout expires while waiting for a process.
 
     Attributes

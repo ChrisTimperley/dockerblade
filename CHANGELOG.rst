@@ -1,3 +1,10 @@
+v0.3.1 (????-??-??)
+-------------------
+
+* updated `TimeoutExpired` and `CalledProcessError` exceptions to inherit
+  from their counterparts in the Python standard library
+
+
 v0.3.0 (2020-03-13)
 -------------------
 
