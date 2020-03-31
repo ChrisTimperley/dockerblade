@@ -5,3 +5,5 @@ ptpython==2.0.6
 tox==3.14.0
 coveralls==1.9.2
 pytest-cov==2.8.1
+sphinx==2.4.4
+sphinx-autodoc-typehints==1.10.3

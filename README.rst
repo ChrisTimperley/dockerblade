@@ -88,3 +88,9 @@ To execute commands inside the container:
 
    # see API docs for more operations
    ...
+
+
+API Documentation
+-----------------
+
+API documentation is available at: https://www.christimperley.co.uk/dockerblade
