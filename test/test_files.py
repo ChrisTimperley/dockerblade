@@ -5,8 +5,6 @@ import os
 import shutil
 import tempfile
 
-from common import alpine_310
-
 from dockerblade import exceptions as exc
 
 

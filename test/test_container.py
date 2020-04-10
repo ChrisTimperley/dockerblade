@@ -6,7 +6,7 @@ from contextlib import ExitStack
 import dockerblade
 
 
-def test_persist():
+def test_persist(daemon):
     with ExitStack() as exit_stack:
         daemon = dockerblade.DockerDaemon()
         exit_stack.push(daemon)

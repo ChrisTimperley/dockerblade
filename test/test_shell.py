@@ -3,8 +3,6 @@ import pytest
 
 import dockerblade
 
-from common import alpine_310
-
 
 def test_run(alpine_310):
     shell = alpine_310.shell('/bin/sh')

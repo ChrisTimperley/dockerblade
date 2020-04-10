@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
-from contextlib import ExitStack
-
 import pytest
+
+from contextlib import ExitStack
 
 import dockerblade
 
 
+@pytest.fixture(scope='session')
+def daemon():
+    with dockerblade.DockerDaemon() as daemon:
+        yield daemon
+
+
 @pytest.fixture
-def alpine_310():
+def alpine_310(daemon):
     with ExitStack() as exit_stack:
-        daemon = dockerblade.DockerDaemon()
-        exit_stack.push(daemon)
         container = daemon.provision('alpine:3.10')
         exit_stack.callback(container.remove)
         yield container
