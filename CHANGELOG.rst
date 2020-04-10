@@ -1,11 +1,13 @@
-v0.3.1 (????-??-??)
+v0.4.0 (????-??-??)
 -------------------
 
-* updated `TimeoutExpired` and `CalledProcessError` exceptions to inherit
-  from their counterparts in the Python standard library
-* added `encoding` parameter to `Popen` to allow users to specify which
-  encoding, if any, should be used to decode the output stream from  a
+* updated :class:`TimeoutExpired` and :class:`CalledProcessError` exceptions to
+  inherit from their counterparts in the Python standard library
+* added :code:`encoding` parameter to :class:`Popen` to allow users to specify
+  which encoding, if any, should be used to decode the output stream from a
   process.
+* added :code:`volumes` parameter to :code:`provision` method in
+  :class:`DockerDaemon`, allowing users to specify volume mounts.
 
 
 v0.3.0 (2020-03-13)

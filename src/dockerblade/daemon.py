@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 __all__ = ('DockerDaemon',)
 
+from typing import Dict, Optional
+
 from loguru import logger
 from docker.models.containers import Container as DockerContainer
 import attr
@@ -45,11 +47,36 @@ class DockerDaemon:
         logger.debug(f"attached to container [{container}]")
         return container
 
-    def provision(self, image: str) -> Container:
-        """Creates a Docker container from a given image."""
+    def provision(self,
+                  image: str,
+                  *,
+                  volumes: Optional[Dict[str, str]] = None
+                  ) -> Container:
+        """Creates a Docker container from a given image.
+
+        Arguments
+        ---------
+        image: str
+            The name of the Docker image that should be used.
+        volumes: Dict[str, str], optional
+            An optional set of volumes that should be mounted inside the
+            container, specified as a dictionary where keys represent a host
+            path or volume name, and values are a dictionary containing
+            the following keys: :code:`bind`, the path to mount the volume
+            inside the container, and :code:`mode`, specifies whether the
+            mount should be read-write :code:`rw` or read-only :code:`ro`.
+
+        Returns
+        -------
+        Container
+            An interface to the newly launched container.
+        """
         logger.debug(f"provisioning container for image [{image}]")
         docker_container = \
-            self.client.containers.run(image, stdin_open=True, detach=True)
+            self.client.containers.run(image,
+                                       stdin_open=True,
+                                       detach=True,
+                                       volumes=volumes)
         container = self.attach(docker_container.id)
         logger.debug(f"provisioned container [{container}]"
                      f" for image [{image}]")
