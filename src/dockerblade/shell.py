@@ -290,6 +290,7 @@ class Shell:
               args: str,
               *,
               cwd: str = '/',
+              encoding: Optional[str] = 'utf-8',
               stdout: bool = True,
               stderr: bool = False,
               time_limit: Optional[int] = None,
@@ -307,11 +308,13 @@ class Shell:
                                                stdout=stdout,
                                                stderr=stderr)
         exec_id = exec_response['Id']
-        exec_stream = docker_api.exec_start(exec_id, stream=True)
+        exec_stream = docker_api.exec_start(exec_id,
+                                            stream=True)
         logger.debug(f'started Exec [{exec_id}] for Popen')
         return Popen(args=args,
                      cwd=cwd,
                      container=self.container,
                      docker_api=docker_api,
                      exec_id=exec_id,
+                     encoding=encoding,
                      stream=exec_stream)

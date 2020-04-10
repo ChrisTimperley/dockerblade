@@ -3,6 +3,9 @@ v0.3.1 (????-??-??)
 
 * updated `TimeoutExpired` and `CalledProcessError` exceptions to inherit
   from their counterparts in the Python standard library
+* added `encoding` parameter to `Popen` to allow users to specify which
+  encoding, if any, should be used to decode the output stream from  a
+  process.
 
 
 v0.3.0 (2020-03-13)

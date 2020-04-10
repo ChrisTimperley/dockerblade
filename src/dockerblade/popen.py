@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __all__ = ('Popen',)
 
-from typing import Optional, Iterator, Dict, Any
+from typing import Any, Dict, Iterator, Optional, Union
 import time
 import signal
 import subprocess
@@ -38,7 +38,7 @@ class Popen:
 
     Attributes
     ----------
-    stream: Iterator[str]
+    stream: Union[Iterator[str], Iterator[bytes]]
         An output stream for this process.
     args: str
         The argument string that was used to generate this process.
@@ -52,6 +52,9 @@ class Popen:
         has terminated.
     retcode: int, optional
         The return code produced by this process, if known.
+    encoding: str, optional
+        The encoding, if any, used by this process. If :code:`None`, the
+        output stream of this process will be treated as a bytestream.
     """
     args: str = attr.ib()
     cwd: str = attr.ib()
@@ -62,14 +65,21 @@ class Popen:
     _pid: Optional[int] = attr.ib(init=False, default=None, repr=False)
     _pid_host: Optional[int] = attr.ib(init=False, default=None)
     _returncode: Optional[int] = attr.ib(init=False, default=None)
+    encoding: Optional[str] = attr.ib(default='utf-8')
 
     def _inspect(self) -> Dict[str, Any]:
         return self._docker_api.exec_inspect(self._exec_id)
 
     @property
-    def stream(self) -> Iterator[str]:
-        for line_bytes in self._stream:
-            yield line_bytes.decode('utf-8')
+    def stream(self) -> Union[Iterator[bytes], Iterator[str]]:
+        def decoded_stream():
+            for line_bytes in self._stream:
+                yield line_bytes.decode(self.encoding)
+
+        if self.encoding is None:
+            yield from self._stream
+        else:
+            yield from decoded_stream()
 
     @property
     def host_pid(self) -> Optional[int]:

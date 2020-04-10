@@ -66,3 +66,8 @@ def test_popen(alpine_310):
         p.wait(1)
     p.kill()
     assert p.wait(1.5) != 0
+
+    expected = 'hello world'
+    p = shell.popen(f"echo '{expected}'", encoding=None)
+    actual = ''.join([b.decode('utf-8') for b in p.stream]).strip()
+    assert actual == expected
