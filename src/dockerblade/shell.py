@@ -54,6 +54,7 @@ class CompletedProcess:
                                      duration=self.duration,
                                      output=self.output)
 
+
 @attr.s(eq=False, hash=False)
 class Shell:
     """Provides shell access to a Docker container.
