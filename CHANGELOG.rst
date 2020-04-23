@@ -1,3 +1,10 @@
+v0.4.1 (????-??-??)
+-------------------
+
+* updated :code:`Shell` construction to raise a :code:`ContainerFileNotFound`
+  if a given source does not exist.
+
+
 v0.4.0 (2020-04-10)
 -------------------
 
