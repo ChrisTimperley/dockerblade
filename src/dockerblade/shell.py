@@ -13,7 +13,8 @@ import docker
 
 from .popen import Popen
 from .stopwatch import Stopwatch
-from .exceptions import CalledProcessError, EnvNotFoundError
+from .exceptions import (CalledProcessError, EnvNotFoundError,
+                         ContainerFileNotFound)
 
 if typing.TYPE_CHECKING:
     from .container import Container
@@ -55,7 +56,7 @@ class CompletedProcess:
                                      output=self.output)
 
 
-@attr.s(eq=False, hash=False)
+@attr.s(eq=False, hash=False, slots=True)
 class Shell:
     """Provides shell access to a Docker container.
     Do not directly call the constructor to create shells. Instead, use the
@@ -68,6 +69,16 @@ class Shell:
     path: str
         The absolute path to the binary (inside the container) that should be
         used to provide this shell.
+    _sources: Sequence[str]
+        A sequence of files, given by their absolute paths, that should be
+        sourced by the shell upon construction.
+    _environment: Mapping[str, str]
+        A mapping from the names of environment variables to their values.
+
+    Raises
+    ------
+    ContainerFileNotFound
+        If a given source file is not found.
     """
     container: 'Container' = attr.ib()
     path: str = attr.ib()
@@ -75,9 +86,15 @@ class Shell:
     _environment: Mapping[str, str] = attr.ib(factory=dict)
 
     def __attrs_post_init__(self) -> None:
-        object.__setattr__(self, 'sources', tuple(self._sources))
+        object.__setattr__(self, '_sources', tuple(self._sources))
 
         if self._sources:
+            filesystem = self.container.filesystem()
+            for src in self._sources:
+                if not filesystem.isfile(src):
+                    raise ContainerFileNotFound(container_id=self.container.id,
+                                                path=src)
+
             command = ' && '.join([f'. {src} > /dev/null 2> /dev/null' for src in self._sources])  # noqa
             command += ' && env'
         else:

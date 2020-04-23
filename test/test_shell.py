@@ -16,6 +16,13 @@ def test_run(alpine_310):
     assert result.output == None
 
 
+def test_bad_sources(alpine_310):
+    filename = 'this-file-does-not-exist'
+    with pytest.raises(dockerblade.exceptions.ContainerFileNotFound) as err:
+        alpine_310.shell('/bin/sh', sources=[filename])
+    assert err.value.path == filename
+
+
 def test_check_output(alpine_310):
     shell = alpine_310.shell('/bin/sh')
     t = shell.check_output
