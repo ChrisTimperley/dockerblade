@@ -1,4 +1,4 @@
-v0.4.1 (????-??-??)
+v0.4.1 (2020-04-23)
 -------------------
 
 * updated :code:`Shell` construction to raise a :code:`ContainerFileNotFound`
