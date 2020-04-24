@@ -441,6 +441,49 @@ class FileSystem:
         cmd = f'test -h {shlex.quote(path)}'
         return self._shell.run(cmd, stdout=False).returncode == 0
 
+    def access(self, path: str, mode: int) -> bool:
+        """Determines whether the user for the shell has access to perform a
+        given operation (e.g., existence, read, write, execute) at a path.
+
+        Parameters
+        ----------
+        path: str
+            The file or directory that should be checked for access.
+        mode:
+            The mode that should be checked. Must be either :code:`F_OK`
+            or the inclusive OR of one or more of :code:`os.R_OK`,
+            :code:`os.W_OK`, and :code:`os.X_OK`.
+
+        Returns
+        -------
+        :code:`True` if access is allowed, :code:`False` if not.
+
+        Reference
+        ---------
+        https://docs.python.org/3/library/os.html#os.access
+        """
+        escaped_path = shlex.quote(path)
+
+        # check for existence of path
+        if mode == os.F_OK:
+            return self.exists(path)
+
+        commands: List[str] = []
+        if mode & os.X_OK > 0:
+            commands.append(f'test -x {escaped_path}')
+        if mode & os.R_OK > 0:
+            commands.append(f'test -r {escaped_path}')
+        if mode & os.W_OK > 0:
+            commands.append(f'test -w {escaped_path}')
+
+        if not any(commands):
+            return False
+
+        command = ' && '.join(commands)
+        outcome = self._shell.run(command, stdout=False, stderr=False)
+        has_access = outcome.returncode == 0
+        return has_access
+
     def patch(self, context: str, diff: str) -> None:
         """Attempts to atomically apply a given patch to the filesystem.
 

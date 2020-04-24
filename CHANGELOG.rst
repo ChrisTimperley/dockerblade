@@ -3,6 +3,8 @@ v0.4.1 (????-??-??)
 
 * updated :code:`Shell` construction to raise a :code:`ContainerFileNotFound`
   if a given source does not exist.
+* added :code:`access` method to `FileSystem` for testing whether user inside
+  shell has permission to perform operations on a given file.
 
 
 v0.4.0 (2020-04-10)

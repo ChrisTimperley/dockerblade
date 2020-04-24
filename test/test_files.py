@@ -36,6 +36,17 @@ def test_tempfile(alpine_310):
     assert not files.exists(filename)
 
 
+def test_access(alpine_310):
+    files = alpine_310.filesystem()
+
+    assert files.access('/etc/hosts', os.F_OK)
+    assert files.access('/etc/hosts', os.R_OK)
+    assert files.access('/etc/hosts', os.W_OK)
+    assert not files.access('/etc/hosts', os.X_OK)
+    assert files.access('/etc/hosts', os.R_OK | os.W_OK)
+    assert not files.access('/etc/hosts', os.R_OK | os.X_OK)
+
+
 def test_remove(alpine_310):
     files = alpine_310.filesystem()
 
