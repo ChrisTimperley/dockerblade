@@ -74,6 +74,7 @@ class DockerDaemon:
         logger.debug(f"provisioning container for image [{image}]")
         docker_container = \
             self.client.containers.run(image,
+                                       command='/bin/sh',
                                        stdin_open=True,
                                        detach=True,
                                        volumes=volumes)
