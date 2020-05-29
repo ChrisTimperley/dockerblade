@@ -2,7 +2,8 @@
 __all__ = ('Shell', 'CompletedProcess', 'CalledProcessError')
 
 import typing
-from typing import Dict, Sequence, Tuple, Optional, overload, Mapping, Union
+from typing import (Dict, Sequence, Tuple, Optional, overload, List, Mapping,
+                    Union)
 from typing_extensions import Literal
 import shlex
 
@@ -10,6 +11,7 @@ from loguru import logger
 from docker.models.containers import Container as DockerContainer
 import attr
 import docker
+import psutil
 
 from .popen import Popen
 from .stopwatch import Stopwatch
@@ -112,6 +114,45 @@ class Shell:
             del env['PWD']
 
         object.__setattr__(self, '_environment', env)
+
+    def _local_to_host_pid(self, pid_local: int) -> Optional[int]:
+        """Finds the host PID for a process inside this shell.
+
+        Parameters
+        ----------
+        pid_local: int
+            The PID of the process inside the container.
+
+        Returns
+        -------
+        int
+            The PID of the same process on the host machine.
+        """
+        container = self.container
+        ctr_pids = [container.pid]
+        info = container._info
+        ctr_pids += [container._exec_id_to_host_pid(i) for i in info['ExecIDs']]
+
+        # obtain a list of all processes inside this container
+        ctr_procs: List[psutil.Process] = []
+        for pid in ctr_pids:
+            proc = psutil.Process(pid)
+            ctr_procs.append(proc)
+            ctr_procs += proc.children(recursive=True)
+
+        # read /proc/PID/status to find the namespace mapping
+        for proc in ctr_procs:
+            fn_proc = f'/proc/{proc.pid}/status'
+            with open(fn_proc, 'r') as fh_proc:
+                lines = filter(lambda l: l.startswith('NSpid'),
+                               fh_proc.readlines())
+                for line in lines:
+                    proc_host_pid, proc_local_pid = \
+                        [int(p) for p in line.strip().split('\t')[1:3]]
+                    if proc_local_pid == pid_local:
+                        return proc_host_pid
+
+        return None
 
     def _instrument(self,
                     command: str,

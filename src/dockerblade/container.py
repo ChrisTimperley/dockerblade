@@ -42,6 +42,10 @@ class Container:
         """Retrieves information about this container from Docker."""
         return self.daemon.api.inspect_container(self.id)
 
+    def _exec_id_to_host_pid(self, exec_id: str) -> int:
+        """Returns the host PID for a given exec command in this container."""
+        return self.daemon.api.exec_inspect(exec_id)['Pid']
+
     def shell(self,
               path: str = '/bin/sh',
               *,
