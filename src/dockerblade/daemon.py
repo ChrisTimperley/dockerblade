@@ -5,7 +5,6 @@ from types import TracebackType
 from typing import Dict, Optional, Type
 
 from loguru import logger
-from docker.models.containers import Container as DockerContainer
 import attr
 import docker
 

@@ -4,13 +4,11 @@ __all__ = ('Popen',)
 from typing import Any, Dict, Iterator, Optional, Union
 import time
 import signal
-import subprocess
 
 from docker import APIClient as DockerAPIClient
 from docker.models.containers import Container as DockerContainer
 from loguru import logger
 import attr
-import docker
 
 from .stopwatch import Stopwatch
 from .exceptions import TimeoutExpired

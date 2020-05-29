@@ -2,15 +2,12 @@
 __all__ = ('Shell', 'CompletedProcess', 'CalledProcessError')
 
 import typing
-from typing import (Dict, Sequence, Tuple, Optional, overload, List, Mapping,
-                    Union)
+from typing import Dict, Sequence, Optional, overload, List, Mapping, Union
 from typing_extensions import Literal
 import shlex
 
 from loguru import logger
-from docker.models.containers import Container as DockerContainer
 import attr
-import docker
 import psutil
 
 from .popen import Popen
@@ -20,7 +17,6 @@ from .exceptions import (CalledProcessError, EnvNotFoundError,
 
 if typing.TYPE_CHECKING:
     from .container import Container
-    from .daemon import DockerDaemon
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -131,7 +127,8 @@ class Shell:
         container = self.container
         ctr_pids = [container.pid]
         info = container._info
-        ctr_pids += [container._exec_id_to_host_pid(i) for i in info['ExecIDs']]
+        ctr_pids += \
+            [container._exec_id_to_host_pid(i) for i in info['ExecIDs']]
 
         # obtain a list of all processes inside this container
         ctr_procs: List[psutil.Process] = []
