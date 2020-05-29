@@ -1,4 +1,4 @@
-v0.5.0 (XXXX-XX-XX)
+v0.5.0 (2020-05-29)
 -------------------
 
 * added experimental `_local_to_host_pid` method to Shell API.
