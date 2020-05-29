@@ -72,7 +72,8 @@ class Popen:
 
     @property
     def stream(self) -> Union[Iterator[bytes], Iterator[str]]:
-        def decoded_stream():
+        def decoded_stream() -> Iterator[str]:
+            assert self.encoding
             for line_bytes in self._stream:
                 yield line_bytes.decode(self.encoding)
 

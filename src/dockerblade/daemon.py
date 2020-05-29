@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 __all__ = ('DockerDaemon',)
 
-from typing import Dict, Optional
+from types import TracebackType
+from typing import Dict, Optional, Type
 
 from loguru import logger
 from docker.models.containers import Container as DockerContainer
@@ -30,7 +31,11 @@ class DockerDaemon:
     def __enter__(self) -> 'DockerDaemon':
         return self
 
-    def __exit__(self, ex_type, ex_val, ex_tb) -> None:
+    def __exit__(self,
+                 ex_type: Optional[Type[BaseException]],
+                 ex_val: Optional[BaseException],
+                 ex_tb: Optional[TracebackType]
+                 ) -> None:
         self.close()
 
     def close(self) -> None:

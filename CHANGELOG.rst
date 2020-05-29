@@ -1,3 +1,10 @@
+v0.4.2 (2020-05-29)
+-------------------
+
+* added support for mypy type hint discovery as specified in PEP 561
+* added missing type annotations
+
+
 v0.4.1 (2020-04-23)
 -------------------
 

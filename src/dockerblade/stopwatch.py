@@ -2,6 +2,8 @@
 __all__ = ('Stopwatch',)
 
 from timeit import default_timer as timer
+from types import TracebackType
+from typing import Optional, Type
 import warnings
 
 import attr
@@ -26,7 +28,11 @@ class Stopwatch:
         self.start()
         return self
 
-    def __exit__(self, ex_type, ex_val, ex_tb) -> None:
+    def __exit__(self,
+                 ex_type: Optional[Type[BaseException]],
+                 ex_val: Optional[BaseException],
+                 ex_tb: Optional[TracebackType]
+                 ) -> None:
         self.stop()
 
     def __repr__(self) -> str:
