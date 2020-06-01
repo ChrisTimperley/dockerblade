@@ -85,6 +85,7 @@ class Shell:
 
     def __attrs_post_init__(self) -> None:
         object.__setattr__(self, '_sources', tuple(self._sources))
+        object.__setattr__(self, '_environment', dict(self._environment))
 
         if self._sources:
             filesystem = self.container.filesystem()
@@ -312,7 +313,6 @@ class Shell:
         args_instrumented = self._instrument(args,
                                              time_limit=time_limit,
                                              kill_after=kill_after)
-
         with Stopwatch() as timer:
             retcode, output_bin = docker_container.exec_run(
                 args_instrumented,

@@ -1,3 +1,10 @@
+v0.5.1 (2020-06-01)
+-------------------
+
+* bug fix: lack of defensive copying in Shell constructor can lead to
+  crashes due to use of mappingproxy type.
+
+
 v0.5.0 (2020-05-29)
 -------------------
 
