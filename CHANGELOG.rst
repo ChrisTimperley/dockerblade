@@ -1,3 +1,10 @@
+v0.5.2 (2020-06-08)
+-------------------
+
+* improved performance of `copy_to_host`, `copy_from_host`, and `read` methods
+  in `FileSystem`.
+
+
 v0.5.1 (2020-06-01)
 -------------------
 

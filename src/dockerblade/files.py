@@ -60,16 +60,16 @@ class FileSystem:
         if not os.path.exists(path_host):
             raise exc.HostFileNotFound(path_host)
 
-        path_container_parent: str = os.path.dirname(path_container)
-        if not self.isdir(path_container_parent):
-            raise exc.ContainerFileNotFound(path=path_container_parent,
-                                            container_id=id_container)
-
         cmd: str = (f"docker cp {shlex.quote(path_host)} "
                     f"{id_container}:{shlex.quote(path_container)}")
         try:
             subprocess.check_call(cmd, shell=True)
         except subprocess.CalledProcessError:
+            path_container_parent: str = os.path.dirname(path_container)
+            if not self.isdir(path_container_parent):
+                raise exc.ContainerFileNotFound(path=path_container_parent,
+                                                container_id=id_container)
+
             reason = (f"failed to copy file [{path_host}] "
                       f"from host to container [{id_container}]: "
                       f"{path_container}")
@@ -100,10 +100,6 @@ class FileSystem:
             if the copy operation failed.
         """
         id_container: str = self.container.id
-        if not self.exists(path_container):
-            raise exc.ContainerFileNotFound(path=path_container,
-                                            container_id=id_container)
-
         path_host_parent: str = os.path.dirname(path_host)
         if not os.path.isdir(path_host_parent):
             raise exc.HostFileNotFound(path_host_parent)
@@ -113,6 +109,10 @@ class FileSystem:
         try:
             subprocess.check_call(cmd, shell=True)
         except subprocess.CalledProcessError:
+            if not self.exists(path_container):
+                raise exc.ContainerFileNotFound(path=path_container,
+                                                container_id=id_container)
+
             reason = (f"failed to copy file [{path_container}] "
                       f"from container [{id_container}] to host: "
                       f"{path_host}")
@@ -233,14 +233,11 @@ class FileSystem:
         Raises
         ------
         ContainerFileNotFound
-            if no file exists at the given path.
+            If no file exists at the given path.
         IsADirectoryError
-            if :code:`fn` is a directory.
+            If :code:`filename` is a directory.
         """
         mode = 'rb' if binary else 'r'
-        if not self.exists(filename):
-            raise exc.ContainerFileNotFound(path=filename,
-                                            container_id=self.container.id)
         if self.isdir(filename):
             raise exc.IsADirectoryError(filename)
 
