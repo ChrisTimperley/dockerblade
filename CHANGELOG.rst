@@ -1,4 +1,4 @@
-v0.5.2 (XXXX-XX-XX)
+v0.5.2 (2020-06-09)
 -------------------
 
 * improved performance of `copy_to_host`, `copy_from_host`, and `read` methods
