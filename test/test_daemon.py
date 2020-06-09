@@ -7,6 +7,19 @@ import tempfile
 import dockerblade
 
 
+def test_host_network_mode(daemon):
+    with ExitStack() as exit_stack:
+        container = daemon.provision('alpine:3.10', network_mode='host')
+        exit_stack.callback(container.remove)
+        assert container.network_mode == 'host'
+        assert container.ip_address == '127.0.0.1'
+
+        container = daemon.provision('alpine:3.10')
+        exit_stack.callback(container.remove)
+        assert container.network_mode == 'bridge'
+        assert container.ip_address != '127.0.0.1'
+
+
 def test_readonly_volume(daemon):
     with ExitStack() as exit_stack:
         expected = 'Hello!'

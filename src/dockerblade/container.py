@@ -89,5 +89,18 @@ class Container:
 
     @property
     def ip_address(self) -> Optional[str]:
-        """The local IP address, if any, assigned to this container."""
-        return self._info['NetworkSettings'].get('IPAddress', None)
+        """The local IP address, if any, assigned to this container. If the
+        container uses the host network mode, 127.0.0.1 (i.e., localhost) will
+        be assigned as the ip_address of this container.
+        """
+        info = self._info
+        if info['HostConfig']['NetworkMode'] == 'host':
+            return '127.0.0.1'
+        else:
+            return info['NetworkSettings'].get('IPAddress', None)
+
+    @property
+    def network_mode(self) -> str:
+        """The network mode used by this container."""
+        print(self._info)
+        return self._info['HostConfig']['NetworkMode']

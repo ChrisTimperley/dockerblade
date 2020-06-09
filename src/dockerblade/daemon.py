@@ -54,7 +54,8 @@ class DockerDaemon:
     def provision(self,
                   image: str,
                   *,
-                  volumes: Optional[Dict[str, str]] = None
+                  volumes: Optional[Dict[str, str]] = None,
+                  network_mode: str = 'bridge'
                   ) -> Container:
         """Creates a Docker container from a given image.
 
@@ -69,6 +70,10 @@ class DockerDaemon:
             the following keys: :code:`bind`, the path to mount the volume
             inside the container, and :code:`mode`, specifies whether the
             mount should be read-write :code:`rw` or read-only :code:`ro`.
+        network_mode: str
+            Specifies the networking mode that should be used by the
+            container. Can be either :code:`bridge`, :code`none`,
+            :code:`container:<name|id>`, or :code:`host`.
 
         Returns
         -------
@@ -80,7 +85,8 @@ class DockerDaemon:
             self.client.containers.run(image,
                                        stdin_open=True,
                                        detach=True,
-                                       volumes=volumes)
+                                       volumes=volumes,
+                                       network_mode=network_mode)
         container = self.attach(docker_container.id)
         logger.debug(f"provisioned container [{container}]"
                      f" for image [{image}]")

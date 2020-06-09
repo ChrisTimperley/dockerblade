@@ -1,8 +1,10 @@
-v0.5.2 (2020-06-08)
+v0.5.2 (XXXX-XX-XX)
 -------------------
 
 * improved performance of `copy_to_host`, `copy_from_host`, and `read` methods
   in `FileSystem`.
+* added `network_mode` parameter to `provision` method of `DockerDaemon`.
+* added `network_mode` property to `Container`.
 
 
 v0.5.1 (2020-06-01)
