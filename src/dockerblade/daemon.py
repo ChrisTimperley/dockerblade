@@ -57,6 +57,7 @@ class DockerDaemon:
                   volumes: Optional[Dict[str, str]] = None,
                   network_mode: str = 'bridge',
                   name: Optional[str] = None,
+                  entrypoint: Optional[str] = None,
                   user: Optional[str] = None
                   ) -> Container:
         """Creates a Docker container from a given image.
@@ -71,6 +72,9 @@ class DockerDaemon:
         user: str, optional
             The user that should be used by the container. If none is given,
             the default user for that container image will be used.
+        entrypoint: str, optional
+            The entrypoint that should be used by the container. If none is
+            given, the default entrypoint for the image will be used.
         volumes: Dict[str, str], optional
             An optional set of volumes that should be mounted inside the
             container, specified as a dictionary where keys represent a host
@@ -94,6 +98,7 @@ class DockerDaemon:
                                        stdin_open=True,
                                        detach=True,
                                        name=name,
+                                       entrypoint=entrypoint,
                                        user=user,
                                        volumes=volumes,
                                        network_mode=network_mode)
