@@ -55,7 +55,8 @@ class DockerDaemon:
                   image: str,
                   *,
                   volumes: Optional[Dict[str, str]] = None,
-                  network_mode: str = 'bridge'
+                  network_mode: str = 'bridge',
+                  name: Optional[str] = None
                   ) -> Container:
         """Creates a Docker container from a given image.
 
@@ -63,6 +64,9 @@ class DockerDaemon:
         ---------
         image: str
             The name of the Docker image that should be used.
+        name: str, optional
+            The name that should be given to the Docker container. If no name
+            is given, Docker will automatically generate one instead.
         volumes: Dict[str, str], optional
             An optional set of volumes that should be mounted inside the
             container, specified as a dictionary where keys represent a host
@@ -85,6 +89,7 @@ class DockerDaemon:
             self.client.containers.run(image,
                                        stdin_open=True,
                                        detach=True,
+                                       name=name,
                                        volumes=volumes,
                                        network_mode=network_mode)
         container = self.attach(docker_container.id)

@@ -26,15 +26,19 @@ class Container:
         The unique ID of the container.
     pid: int
         The PID of the container process on the host machine.
+    name: str, optional
+        The name, if any, assigned to the container.
     """
     daemon: 'DockerDaemon' = attr.ib()
     _docker: DockerContainer = \
         attr.ib(repr=False, eq=False, hash=False)
     id: str = attr.ib(init=False, repr=True)
+    name: Optional[str] = attr.ib(init=False, repr=False)
     pid: int = attr.ib(init=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         object.__setattr__(self, 'id', self._docker.id)
+        object.__setattr__(self, 'name', self._docker.name)
         object.__setattr__(self, 'pid', int(self._info['State']['Pid']))
 
     @property
