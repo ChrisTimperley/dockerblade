@@ -3,6 +3,7 @@ v0.5.3 (XXXX-XX-XX)
 
 * added `name` parameter to `provision` method of `DockerDaemon`,
   and added `name` attribute to `Container` class.
+* added `user` parameter to `provision` method of `DockerDaemon`.
 
 
 v0.5.2 (2020-06-09)
