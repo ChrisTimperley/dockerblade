@@ -1,4 +1,4 @@
-v0.5.3 (XXXX-XX-XX)
+v0.5.3 (2020-06-29)
 -------------------
 
 * added `name` attribute to `Container` class.
