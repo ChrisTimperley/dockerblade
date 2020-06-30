@@ -2,7 +2,7 @@
 __all__ = ('DockerDaemon',)
 
 from types import TracebackType
-from typing import Mapping, Optional, Type
+from typing import Any, Mapping, Optional, Type
 
 from loguru import logger
 import attr
@@ -60,7 +60,7 @@ class DockerDaemon:
                   name: Optional[str] = None,
                   ports: Optional[Mapping[int, int]] = None,
                   user: Optional[str] = None,
-                  volumes: Optional[Mapping[str, str]] = None,
+                  volumes: Optional[Mapping[str, Any]] = None,
                   ) -> Container:
         """Creates a Docker container from a given image.
 
