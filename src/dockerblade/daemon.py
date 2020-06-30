@@ -54,12 +54,13 @@ class DockerDaemon:
     def provision(self,
                   image: str,
                   *,
-                  volumes: Optional[Mapping[str, str]] = None,
-                  network_mode: str = 'bridge',
-                  name: Optional[str] = None,
                   entrypoint: Optional[str] = None,
                   environment: Optional[Mapping[str, str]] = None,
-                  user: Optional[str] = None
+                  network_mode: str = 'bridge',
+                  name: Optional[str] = None,
+                  ports: Optional[Mapping[int, int]] = None,
+                  user: Optional[str] = None,
+                  volumes: Optional[Mapping[str, str]] = None,
                   ) -> Container:
         """Creates a Docker container from a given image.
 
@@ -79,13 +80,17 @@ class DockerDaemon:
         environment: Mapping[str, str], optional
             An optional set of additional environment variables, indexed by
             name, that should be used by the system.
-        volumes: Dict[str, str], optional
+        volumes: Mapping[str, str], optional
             An optional set of volumes that should be mounted inside the
             container, specified as a dictionary where keys represent a host
             path or volume name, and values are a dictionary containing
             the following keys: :code:`bind`, the path to mount the volume
             inside the container, and :code:`mode`, specifies whether the
             mount should be read-write :code:`rw` or read-only :code:`ro`.
+        ports: Mapping[int, int], optional
+            An optional dictionary specifying port mappings between the host
+            and container, where keys represent container ports and values
+            represent host ports.
         network_mode: str
             Specifies the networking mode that should be used by the
             container. Can be either :code:`bridge`, :code`none`,
@@ -104,6 +109,7 @@ class DockerDaemon:
                                        name=name,
                                        entrypoint=entrypoint,
                                        environment=environment,
+                                       ports=ports,
                                        user=user,
                                        volumes=volumes,
                                        network_mode=network_mode)
