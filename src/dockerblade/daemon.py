@@ -53,6 +53,7 @@ class DockerDaemon:
 
     def provision(self,
                   image: str,
+                  command: Optional[str] = None,
                   *,
                   entrypoint: Optional[str] = None,
                   environment: Optional[Mapping[str, str]] = None,
@@ -68,6 +69,10 @@ class DockerDaemon:
         ---------
         image: str
             The name of the Docker image that should be used.
+        command: str
+            The command that should be run inside the container. If no
+            command is given, the default command for the Docker image will
+            be used instead.
         name: str, optional
             The name that should be given to the Docker container. If no name
             is given, Docker will automatically generate one instead.
@@ -104,6 +109,7 @@ class DockerDaemon:
         logger.debug(f"provisioning container for image [{image}]")
         docker_container = \
             self.client.containers.run(image,
+                                       command=command,
                                        stdin_open=True,
                                        detach=True,
                                        name=name,

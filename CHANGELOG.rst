@@ -1,3 +1,9 @@
+v0.5.4 (XXXX-XX-XX)
+-------------------
+
+* added `command` parameter to `provision` method of `DockerDaemon`.
+
+
 v0.5.3 (2020-06-29)
 -------------------
 
