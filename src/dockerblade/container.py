@@ -106,5 +106,4 @@ class Container:
     @property
     def network_mode(self) -> str:
         """The network mode used by this container."""
-        print(self._info)
         return self._info['HostConfig']['NetworkMode']
