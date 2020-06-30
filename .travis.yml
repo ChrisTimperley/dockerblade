@@ -1,12 +1,13 @@
 language: python
-sudo: required
+os: linux
+dist: xenial
 services:
 - docker
 python:
 - '3.6'
 install:
 - pip install -r requirements.dev.txt
-- pip install --upgrade .
+- pip install .
 script:
 - tox
 after_success:
@@ -18,7 +19,7 @@ before_deploy:
 - touch docs/_build/html/.nojekyll
 deploy:
 - provider: pypi
-  user: ChrisTimperley
+  username: ChrisTimperley
   password:
     secure: "h6KGQ4vVEuBSd1mFcrz+WKFbl+nFA9OWUGkJhQVlnb7/nCLees7jBhBIf4AJVcsgB+WZc+qlBGzkso97T9jsO8F5DoHnMnsp3DexaWBZEdnpnTy/EYNsnPix/FpiXlbiLFugVp68kltZ+NZ3bziT8DMaDyRBn29KqISK5ZhWLJv8wnW56sWoO4RNlZBCMOsXlyfGg/De3w2Bw1pIX/P+97b//PsXLmOEjBr2oiOD+j8GkgkT8lzI/MCC8ZUvBJQecKyj0AKSEPqxVkaQtV+x2YYxGIUjASK1eJtaiXYj20phrzmacaz28+FVco8mfnqnO/Ot/cZ+ZqgZpy5Zt1gWlnJ1IuqKKOvFanJcfSc0mSejrv6Uq9MZFIE8RgH5B78ZrGJVYZ/CK5iY6ZERz5Rz8K0Gi8YmXbZAqA1cDJ8tr3JacP/Xyj1gbhwY3oz7+cUrY5XO4UV8MxBzveQvxBhbn5lwJt+9UpB2os+D+0rN8K+BNry+miiXegLzHnui60WNsGhpB9Xe1p1aB9Rrn0qS608ljs5wV+ji2iMDdVTYo0KR2raK7Glmimr6FTZMUiXh7/mqzQzz2JG0W8PM10hHvKyApjrhZgV6+APf/WfgBX4KFw1baqQ0V70dTR84y4Z8OesPYlMKMZ7HQOW/npejGOYQ4h+paF4E/te6I1lR1Us="
   on:
@@ -27,7 +28,7 @@ deploy:
 - provider: pages
   skip_cleanup: true
   local_dir: docs/_build/html
-  github_token: "$GITHUB_TOKEN"
+  token: "$GH_TOKEN"
   on:
     branch: master
     python: '3.6'
