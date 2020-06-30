@@ -1,10 +1,9 @@
 v0.5.3 (XXXX-XX-XX)
 -------------------
 
-* added `name` parameter to `provision` method of `DockerDaemon`,
-  and added `name` attribute to `Container` class.
-* added `user` parameter to `provision` method of `DockerDaemon`.
-* added `entrypoint` parameter to `provision` method of `DockerDaemon`.
+* added `name` attribute to `Container` class.
+* added `user`, `name`, `environment`, and `entrypoint` parameters to
+  `provision` method of `DockerDaemon`.
 * bug fix: added `py.typed` to `MANIFEST.in` to fix PEP 561 support.
 
 

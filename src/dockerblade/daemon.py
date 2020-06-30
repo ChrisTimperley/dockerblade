@@ -2,7 +2,7 @@
 __all__ = ('DockerDaemon',)
 
 from types import TracebackType
-from typing import Dict, Optional, Type
+from typing import Mapping, Optional, Type
 
 from loguru import logger
 import attr
@@ -54,10 +54,11 @@ class DockerDaemon:
     def provision(self,
                   image: str,
                   *,
-                  volumes: Optional[Dict[str, str]] = None,
+                  volumes: Optional[Mapping[str, str]] = None,
                   network_mode: str = 'bridge',
                   name: Optional[str] = None,
                   entrypoint: Optional[str] = None,
+                  environment: Optional[Mapping[str, str]] = None,
                   user: Optional[str] = None
                   ) -> Container:
         """Creates a Docker container from a given image.
@@ -75,6 +76,9 @@ class DockerDaemon:
         entrypoint: str, optional
             The entrypoint that should be used by the container. If none is
             given, the default entrypoint for the image will be used.
+        environment: Mapping[str, str], optional
+            An optional set of additional environment variables, indexed by
+            name, that should be used by the system.
         volumes: Dict[str, str], optional
             An optional set of volumes that should be mounted inside the
             container, specified as a dictionary where keys represent a host
@@ -99,6 +103,7 @@ class DockerDaemon:
                                        detach=True,
                                        name=name,
                                        entrypoint=entrypoint,
+                                       environment=environment,
                                        user=user,
                                        volumes=volumes,
                                        network_mode=network_mode)

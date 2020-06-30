@@ -28,6 +28,17 @@ def test_name(daemon):
         assert container.name == name
 
 
+def test_environment(daemon):
+    with ExitStack() as exit_stack:
+        env_var = 'FOO'
+        env_val = 'FOOBARBAZ'
+        env = {env_var: env_val}
+        container = daemon.provision('alpine:3.10', environment=env)
+        exit_stack.callback(container.remove)
+        shell = container.shell()
+        assert shell.environ(env_var) == env_val
+
+
 def test_readonly_volume(daemon):
     with ExitStack() as exit_stack:
         expected = 'Hello!'
