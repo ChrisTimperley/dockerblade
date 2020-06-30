@@ -5,6 +5,7 @@ v0.5.3 (XXXX-XX-XX)
 * added `ports`, `user`, `name`, `environment`, and `entrypoint` parameters to
   `provision` method of `DockerDaemon`.
 * bug fix: added `py.typed` to `MANIFEST.in` to fix PEP 561 support.
+* added `__enter__` and `__exit__` to `Container`.
 
 
 v0.5.2 (2020-06-09)

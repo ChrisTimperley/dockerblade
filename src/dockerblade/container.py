@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 __all__ = ('Container',)
 
+from types import TracebackType
 import typing
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Mapping, Optional, Sequence, Type
 
 import attr
 from docker.models.containers import Container as DockerContainer
@@ -107,3 +108,13 @@ class Container:
     def network_mode(self) -> str:
         """The network mode used by this container."""
         return self._info['HostConfig']['NetworkMode']
+
+    def __enter__(self) -> 'Container':
+        return self
+
+    def __exit__(self,
+                 ex_type: Optional[Type[BaseException]],
+                 ex_val: Optional[BaseException],
+                 ex_tb: Optional[TracebackType]
+                 ) -> None:
+        self.remove()
