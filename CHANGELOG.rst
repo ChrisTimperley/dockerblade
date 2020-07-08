@@ -1,4 +1,4 @@
-v0.5.5 (XXXX-XX-XX)
+v0.5.5 (2020-07-08)
 -------------------
 
 * updated default `url` for `DockerDaemon` to be the value of the
