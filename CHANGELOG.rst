@@ -1,3 +1,12 @@
+v0.5.5 (XXXX-XX-XX)
+-------------------
+
+* updated default `url` for `DockerDaemon` to be the value of the
+  `DOCKER_HOST` environment variable, if present. If the `DOCKER_HOST`
+  environment variable is not present, `unix://var/run/docker.sock`
+  will be used instead.
+
+
 v0.5.4 (2020-06-29)
 -------------------
 
