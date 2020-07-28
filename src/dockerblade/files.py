@@ -60,7 +60,7 @@ class FileSystem:
         if not os.path.exists(path_host):
             raise exc.HostFileNotFound(path_host)
 
-        cmd: str = (f"docker cp {shlex.quote(path_host)} "
+        cmd: str = (f"docker cp -L {shlex.quote(path_host)} "
                     f"{id_container}:{shlex.quote(path_container)}")
         try:
             subprocess.check_call(cmd, shell=True)
@@ -104,7 +104,8 @@ class FileSystem:
         if not os.path.isdir(path_host_parent):
             raise exc.HostFileNotFound(path_host_parent)
 
-        cmd: str = (f"docker cp {id_container}:{shlex.quote(path_container)} "
+        cmd: str = (f"docker cp -L "
+                    f"{id_container}:{shlex.quote(path_container)} "
                     f"{shlex.quote(path_host)}")
         try:
             subprocess.check_call(cmd, shell=True)

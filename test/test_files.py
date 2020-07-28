@@ -279,6 +279,16 @@ def test_copy_to_host(alpine_310):
     finally:
         os.remove(fn_host)
 
+    # sym-linked file
+    shell.run('ln -s /tmp/hello /tmp/linked')
+    _, fn_host = tempfile.mkstemp()
+    try:
+        files.copy_to_host('/tmp/linked', fn_host)
+        with open(fn_host, 'r') as f:
+            assert f.read() == (content + '\n')
+    finally:
+        os.remove(fn_host)
+
     # non-existent file
     _, fn_host = tempfile.mkstemp()
     try:
