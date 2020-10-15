@@ -12,15 +12,13 @@ import os
 
 import attr
 import tempfile
+from loguru import logger
 
 from . import exceptions as exc
 
 if typing.TYPE_CHECKING:
     from .shell import Shell
     from .container import Container
-
-logger: logging.Logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 @attr.s(slots=True)
