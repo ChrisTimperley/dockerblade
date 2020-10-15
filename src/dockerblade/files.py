@@ -259,13 +259,11 @@ class FileSystem:
         if self.isdir(filename):
             raise exc.IsADirectoryError(filename)
 
-        _, filename_host_temp = tempfile.mkstemp(suffix='.roswire')
-        try:
+        with tempfile.TemporaryDirectory() as host_temp_dir:
+            filename_host_temp = os.path.join(host_temp_dir, 'contents')
             self.copy_to_host(filename, filename_host_temp)
             with open(filename_host_temp, mode) as f:
                 return f.read()
-        finally:
-            os.remove(filename_host_temp)
 
     def find(self, path: str, filename: str) -> List[str]:
         """
