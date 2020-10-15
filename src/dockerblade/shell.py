@@ -4,16 +4,16 @@ __all__ = ('Shell', 'CompletedProcess', 'CalledProcessError')
 import typing
 from typing import Dict, Sequence, Optional, overload, List, Mapping, Union
 from typing_extensions import Literal
-import shlex
 
 from loguru import logger
 import attr
 import psutil
 
-from .popen import Popen
-from .stopwatch import Stopwatch
 from .exceptions import (CalledProcessError, EnvNotFoundError,
                          ContainerFileNotFound)
+from .popen import Popen
+from .stopwatch import Stopwatch
+from .util import quote_container
 
 if typing.TYPE_CHECKING:
     from .container import Container
@@ -158,7 +158,7 @@ class Shell:
                     time_limit: Optional[int] = None,
                     kill_after: int = 1
                     ) -> str:
-        q = shlex.quote
+        q = quote_container
         logger.debug(f"instrumenting command: {command}")
         command = f'{self.path} -c {q(command)}'
         if time_limit:

@@ -36,7 +36,7 @@ class CopyFailed(DockerBladeException):
     reason: str
 
     def __str__(self) -> str:
-        return 'Copy operation failed: {self.reason}'
+        return f'Copy operation failed: {self.reason}'
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)

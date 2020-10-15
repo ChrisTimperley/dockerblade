@@ -5,7 +5,6 @@ from typing import Iterator, Union, List, Optional, overload
 from typing_extensions import Literal
 import contextlib
 import typing
-import shlex
 import subprocess
 import os
 
@@ -14,10 +13,13 @@ import tempfile
 from loguru import logger
 
 from . import exceptions as exc
+from .util import quote_container, quote_host
 
 if typing.TYPE_CHECKING:
     from .shell import Shell
     from .container import Container
+
+_ON_WINDOWS = os.name == 'nt'
 
 
 @attr.s(slots=True)
@@ -57,8 +59,17 @@ class FileSystem:
         if not os.path.exists(path_host):
             raise exc.HostFileNotFound(path_host)
 
-        cmd: str = (f"docker cp -L {shlex.quote(path_host)} "
-                    f"{id_container}:{shlex.quote(path_container)}")
+        path_host_escaped = quote_host(path_host)
+        path_container_escaped = quote_host(path_container)
+
+        if _ON_WINDOWS:
+            if path_container_escaped[0] != '"':
+                path_container_escaped = f'"{path_container_escaped}"'
+            if path_host_escaped[0] != '"':
+                path_host_escaped = f'"{path_host_escaped}"'
+
+        cmd: str = (f"docker cp -L {path_host_escaped} "
+                    f"{id_container}:{path_container_escaped}")
         try:
             subprocess.check_call(cmd, shell=True)
         except subprocess.CalledProcessError:
@@ -101,9 +112,18 @@ class FileSystem:
         if not os.path.isdir(path_host_parent):
             raise exc.HostFileNotFound(path_host_parent)
 
+        path_host_escaped = quote_host(path_host)
+        path_container_escaped = quote_host(path_container)
+
+        if _ON_WINDOWS:
+            if path_container_escaped[0] != '"':
+                path_container_escaped = f'"{path_container_escaped}"'
+            if path_host_escaped[0] != '"':
+                path_host_escaped = f'"{path_host_escaped}"'
+
         cmd: str = (f"docker cp -L "
-                    f"{id_container}:{shlex.quote(path_container)} "
-                    f"{shlex.quote(path_host)}")
+                    f"{id_container}:{path_container_escaped} "
+                    f"{path_host_escaped}")
         try:
             subprocess.check_call(cmd, shell=True)
         except subprocess.CalledProcessError:
@@ -133,7 +153,7 @@ class FileSystem:
         UnexpectedError
             if an unexpected failure occurs.
         """
-        command = f'rm {shlex.quote(filename)}'
+        command = f'rm {quote_container(filename)}'
         try:
             self._shell.check_call(command)
         except exc.CalledProcessError as error:
@@ -164,7 +184,7 @@ class FileSystem:
         UnexpectedError
             an unexpected failure occurred.
         """
-        escaped_directory = shlex.quote(directory)
+        escaped_directory = quote_container(directory)
         command = (f'test -e {escaped_directory} || exit 50 && '
                    f'test -d {escaped_directory} || exit 51 && '
                    f'rmdir {escaped_directory}')
@@ -274,10 +294,10 @@ class FileSystem:
             If an unexpected error occurred during the find operation.
         """
         # TODO execute as root
-        path_escaped = shlex.quote(path)
+        path_escaped = quote_container(path)
         command = (f'test ! -e {path_escaped} && exit 50 || '
                    f'test ! -d {path_escaped} && exit 51 || '
-                   f'find {path_escaped} -name {shlex.quote(filename)}')
+                   f'find {path_escaped} -name {quote_container(filename)}')
         try:
             output = self._shell.check_output(command, text=True)
         except exc.CalledProcessError as error:
@@ -323,14 +343,14 @@ class FileSystem:
         if self.exists(d_parent) and self.isfile(d_parent):
             raise exc.IsNotADirectoryError(d_parent)
 
-        command = f'mkdir -p {shlex.quote(d)}'
+        command = f'mkdir -p {quote_container(d)}'
         self._shell.check_call(command)
 
     def exists(self, path: str) -> bool:
         """Determines whether a file or directory exists at the given path.
         Inspired by :meth:`os.path.exists`.
         """
-        cmd = f'test -e {shlex.quote(path)}'
+        cmd = f'test -e {quote_container(path)}'
         return self._shell.run(cmd, stdout=False).returncode == 0
 
     def mkdir(self, directory: str) -> None:
@@ -348,9 +368,9 @@ class FileSystem:
         UnexpectedError
             if an unexpected error occurred.
         """
-        directory_escaped = shlex.quote(directory)
+        directory_escaped = quote_container(directory)
         directory_parent = os.path.dirname(directory)
-        directory_parent_escaped = shlex.quote(directory_parent)
+        directory_parent_escaped = quote_container(directory_parent)
         command = (f"test -e {directory_escaped} && exit 50 || "
                    f"test ! -e {directory_parent_escaped} && exit 51 || "
                    f"test ! -d {directory_parent_escaped} && exit 52 || "
@@ -396,7 +416,7 @@ class FileSystem:
         exceptions.CalledProcessError
             if an unexpected error occurred during execution of this command
         """
-        directory_escaped = shlex.quote(directory)
+        directory_escaped = quote_container(directory)
         command = (f'test -e {directory_escaped} || exit 50 && '
                    f'test -d {directory_escaped} || exit 51 && '
                    f'ls --color=never -A -1 {directory_escaped}')
@@ -419,21 +439,21 @@ class FileSystem:
         """Determines whether a regular file exists at a given path.
         Inspired by :meth:`os.path.isfile`.
         """
-        cmd = f'test -f {shlex.quote(path)}'
+        cmd = f'test -f {quote_container(path)}'
         return self._shell.run(cmd, stdout=False).returncode == 0
 
     def isdir(self, path: str) -> bool:
         """Determines whether a directory exists at a given path.
         Inspired by :meth:`os.path.dir`.
         """
-        cmd = f'test -d {shlex.quote(path)}'
+        cmd = f'test -d {quote_container(path)}'
         return self._shell.run(cmd, stdout=False).returncode == 0
 
     def islink(self, path: str) -> bool:
         """Determines whether a symbolic link exists at a given path.
         Inspired by :meth:`os.path.islink`.
         """
-        cmd = f'test -h {shlex.quote(path)}'
+        cmd = f'test -h {quote_container(path)}'
         return self._shell.run(cmd, stdout=False).returncode == 0
 
     def access(self, path: str, mode: int) -> bool:
@@ -457,7 +477,7 @@ class FileSystem:
         ---------
         https://docs.python.org/3/library/os.html#os.access
         """
-        escaped_path = shlex.quote(path)
+        escaped_path = quote_container(path)
 
         # check for existence of path
         if mode == os.F_OK:
@@ -509,8 +529,8 @@ class FileSystem:
         with self.tempfile(suffix='.diff') as fn_diff:
             self.write(fn_diff, diff)
 
-            safe_context = shlex.quote(context)
-            safe_fn_diff = shlex.quote(fn_diff)
+            safe_context = quote_container(context)
+            safe_fn_diff = quote_container(fn_diff)
             if self.isdir(context):
                 cmd = f'patch -u -p0 -f -i {safe_fn_diff} -d {safe_context}'
             elif self.isfile(context):
@@ -549,9 +569,9 @@ class FileSystem:
         str
             The absolute path of the temporary file.
         """
-        template = shlex.quote(f"{prefix if prefix else 'tmp'}.XXXXXXXXXX")
+        template = quote_container(f"{prefix if prefix else 'tmp'}.XXXXXXXXXX")
         dirname = dirname if dirname else '/tmp'
-        cmd_parts = ('mktemp', template, '-p', shlex.quote(dirname))
+        cmd_parts = ('mktemp', template, '-p', quote_container(dirname))
         if not self.isdir(dirname):
             raise exc.ContainerFileNotFound(path=dirname,
                                             container_id=self.container.id)

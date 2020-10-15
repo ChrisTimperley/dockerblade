@@ -3,6 +3,8 @@ v0.5.6 (XXXX-XX-XX)
 
 * fixed issue when copying symbolically linked files (#73)
 * updated Daemon constructor to support Windows out of the box
+* fixed `copy_from_host` and `copy_to_host` in `FileSystem` to support
+  Windows hosts.
 
 
 v0.5.5 (2020-07-08)
