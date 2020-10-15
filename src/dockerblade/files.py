@@ -217,13 +217,11 @@ class FileSystem:
                                             container_id=self.container.id)
 
         # write to a temporary file on the host and copy to container
-        _, temp_filename = tempfile.mkstemp()
-        try:
+        with tempfile.TemporaryDirectory() as host_temp_dir:
+            temp_filename = os.path.join(host_temp_dir, 'contents')
             with open(temp_filename, mode) as fh:
                 fh.write(contents)
             self.copy_from_host(temp_filename, filename)
-        finally:
-            os.remove(temp_filename)
 
     @overload
     def read(self, filename: str) -> str:
@@ -259,13 +257,11 @@ class FileSystem:
         if self.isdir(filename):
             raise exc.IsADirectoryError(filename)
 
-        _, filename_host_temp = tempfile.mkstemp(suffix='.roswire')
-        try:
+        with tempfile.TemporaryDirectory() as host_temp_dir:
+            filename_host_temp = os.path.join(host_temp_dir, 'contents')
             self.copy_to_host(filename, filename_host_temp)
             with open(filename_host_temp, mode) as f:
                 return f.read()
-        finally:
-            os.remove(filename_host_temp)
 
     def find(self, path: str, filename: str) -> List[str]:
         """
