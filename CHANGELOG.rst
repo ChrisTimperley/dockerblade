@@ -1,3 +1,10 @@
+v0.5.6 (XXXX-XX-XX)
+-------------------
+
+* fixed issue when copying symbolically linked files (#73)
+* updated Daemon constructor to support Windows out of the box
+
+
 v0.5.5 (2020-07-08)
 -------------------
 
