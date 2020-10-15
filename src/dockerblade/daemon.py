@@ -3,7 +3,6 @@ __all__ = ('DockerDaemon',)
 
 from types import TracebackType
 from typing import Any, Mapping, Optional, Type
-import os
 
 from loguru import logger
 import attr
@@ -11,21 +10,19 @@ import docker
 
 from .container import Container
 
-_DEFAULT_URL = os.environ.get('DOCKER_HOST', 'unix://var/run/docker.sock')
-
 
 @attr.s(frozen=True)
 class DockerDaemon:
     """Maintains a connection to a Docker daemon."""
-    url: str = attr.ib(default=_DEFAULT_URL)
+    url: Optional[str] = attr.ib(default=None)
     client: docker.DockerClient = \
         attr.ib(init=False, eq=False, hash=False, repr=False)
     api: docker.APIClient = \
         attr.ib(init=False, eq=False, hash=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
-        api = docker.APIClient(self.url)
         client = docker.DockerClient(self.url)
+        api = client.api
         object.__setattr__(self, 'client', client)
         object.__setattr__(self, 'api', api)
         logger.debug(f"created daemon connection: {self}")
