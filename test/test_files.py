@@ -71,18 +71,18 @@ def test_mkdir(alpine_310):
     files.mkdir('/tmp/cool')
     assert files.isdir('/tmp/cool')
     assert 'cool' in files.listdir('/tmp')
-    
+
     # directory already exists
     with pytest.raises(exc.ContainerFileAlreadyExists):
         files.mkdir('/tmp/cool')
     assert files.isdir('/tmp/cool')
-    
+
     # intermediate directory doesn't exist
     with pytest.raises(exc.ContainerFileNotFound):
         files.mkdir('/tmp/foo/bar')
     assert not files.isdir('/tmp/foo/bar')
     assert not files.isdir('/tmp/foo')
-    
+
     # parent directory is a file
     with pytest.raises(exc.IsNotADirectoryError):
         files.mkdir('/etc/hosts/cool')
@@ -165,15 +165,15 @@ def test_listdir(alpine_310):
         'udhcpd.conf'
     ]
     assert files.listdir('/etc') == expected
-    
+
     # not a directory
     with pytest.raises(exc.IsNotADirectoryError):
         files.listdir('/etc/services')
-    
+
     # not a file or directory
     with pytest.raises(exc.ContainerFileNotFound):
         files.listdir('/tmp/idontexist')
-    
+
     # abs
     expected = [os.path.join('/etc', p) for p in expected]
     assert files.listdir('/etc', absolute=True) == expected
@@ -271,31 +271,25 @@ def test_copy_to_host(alpine_310):
     shell = alpine_310.shell()
     files = alpine_310.filesystem()
     shell.run(f'echo "{content}" > /tmp/hello')
-    _, fn_host = tempfile.mkstemp()
-    try:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        fn_host = os.path.join(tmp_dir, 'hello')
         files.copy_to_host('/tmp/hello', fn_host)
         with open(fn_host, 'r') as f:
             assert f.read() == (content + '\n')
-    finally:
-        os.remove(fn_host)
 
     # sym-linked file
     shell.run('ln -s /tmp/hello /tmp/linked')
-    _, fn_host = tempfile.mkstemp()
-    try:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        fn_host = os.path.join(tmp_dir, 'linked')
         files.copy_to_host('/tmp/linked', fn_host)
         with open(fn_host, 'r') as f:
             assert f.read() == (content + '\n')
-    finally:
-        os.remove(fn_host)
 
     # non-existent file
-    _, fn_host = tempfile.mkstemp()
-    try:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        fn_host = os.path.join(tmp_dir, 'bar')
         with pytest.raises(exc.ContainerFileNotFound):
              files.copy_to_host('/foo/bar', fn_host)
-    finally:
-        os.remove(fn_host)
 
     # non-existent host directory
     fn_host = '/tmp/foo/bar/foo/bar'
@@ -303,15 +297,12 @@ def test_copy_to_host(alpine_310):
         files.copy_to_host('/tmp/hello', fn_host)
 
     # copy directory
-    dir_host: str = tempfile.mkdtemp()
-    dir_host_periodic: str = os.path.join(dir_host, 'periodic')
-    try:
+    with tempfile.TemporaryDirectory() as dir_host:
+        dir_host_periodic: str = os.path.join(dir_host, 'periodic')
         files.copy_to_host('/etc/periodic', dir_host)
         assert os.path.isdir(dir_host_periodic)
         assert set(os.listdir(dir_host_periodic)) == {
             'daily', 'weekly', '15min', 'hourly', 'monthly'}
-    finally:
-        shutil.rmtree(dir_host)
 
 
 def test_copy_from_host(alpine_310):
@@ -319,8 +310,9 @@ def test_copy_from_host(alpine_310):
     files = alpine_310.filesystem()
 
     content = 'hello world'
-    try:
-        _, fn_host = tempfile.mkstemp()
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        fn_host = os.path.join(tmp_dir, 'copied-from-host')
         with open(fn_host, 'w') as fh:
             fh.write(content)
 
@@ -331,8 +323,6 @@ def test_copy_from_host(alpine_310):
         # copy file
         files.copy_from_host(fn_host, '/tmp/foo')
         assert files.read('/tmp/foo') == content
-    finally:
-        os.remove(fn_host)
 
     # copy non-existent file from host
     assert not os.path.exists(fn_host)
@@ -340,9 +330,7 @@ def test_copy_from_host(alpine_310):
         files.copy_from_host(fn_host, '/tmp/bar')
 
     # copy directory
-    try:
-        dir_host = tempfile.mkdtemp()
-
+    with tempfile.TemporaryDirectory() as dir_host:
         fn_bar = os.path.join(dir_host, 'bar')
         with open(fn_bar, 'w') as fh:
             fh.write(content)
@@ -355,8 +343,6 @@ def test_copy_from_host(alpine_310):
         assert files.exists('/tmp/foobardir')
         assert files.exists('/tmp/foobardir/foo')
         assert files.exists('/tmp/foobardir/bar')
-    finally:
-        shutil.rmtree(dir_host)
 
 
 def test_read(alpine_310):
