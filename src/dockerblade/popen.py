@@ -3,7 +3,6 @@ __all__ = ('Popen',)
 
 from typing import Any, Dict, Iterator, Optional, Union
 import time
-import signal
 
 from docker import APIClient as DockerAPIClient
 from docker.models.containers import Container as DockerContainer
@@ -121,11 +120,11 @@ class Popen:
 
     def kill(self) -> None:
         """Kills the process via a SIGKILL signal."""
-        self.send_signal(signal.SIGKILL)
+        self.send_signal(9)
 
     def terminate(self) -> None:
         """Terminates the process via a SIGTERM signal."""
-        self.send_signal(signal.SIGTERM)
+        self.send_signal(15)
 
     def poll(self) -> Optional[int]:
         """Checks if the process has terminated and returns its returncode."""
