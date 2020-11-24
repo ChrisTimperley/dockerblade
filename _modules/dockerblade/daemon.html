@@ -1,0 +1,209 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dockerblade.daemon &#8212; Dockerblade  documentation</title>
+    <link rel="stylesheet" href="../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Dockerblade  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for dockerblade.daemon</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;DockerDaemon&#39;</span><span class="p">,)</span>
+
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">TracebackType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span>
+
+<span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">docker</span>
+
+<span class="kn">from</span> <span class="nn">.container</span> <span class="kn">import</span> <span class="n">Container</span>
+
+
+<div class="viewcode-block" id="DockerDaemon"><a class="viewcode-back" href="../../dockerblade.daemon.html#dockerblade.daemon.DockerDaemon">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DockerDaemon</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Maintains a connection to a Docker daemon.&quot;&quot;&quot;</span>
+    <span class="n">url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">client</span><span class="p">:</span> <span class="n">docker</span><span class="o">.</span><span class="n">DockerClient</span> <span class="o">=</span> \
+        <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">hash</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">api</span><span class="p">:</span> <span class="n">docker</span><span class="o">.</span><span class="n">APIClient</span> <span class="o">=</span> \
+        <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">hash</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">docker</span><span class="o">.</span><span class="n">DockerClient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">api</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;client&#39;</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;api&#39;</span><span class="p">,</span> <span class="n">api</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;created daemon connection: </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;DockerDaemon&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">ex_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">]],</span>
+                 <span class="n">ex_val</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">],</span>
+                 <span class="n">ex_tb</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TracebackType</span><span class="p">]</span>
+                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DockerDaemon.close"><a class="viewcode-back" href="../../dockerblade.daemon.html#dockerblade.daemon.DockerDaemon.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;closing daemon connection: </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;closed daemon connection: </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DockerDaemon.attach"><a class="viewcode-back" href="../../dockerblade.daemon.html#dockerblade.daemon.DockerDaemon.attach">[docs]</a>    <span class="k">def</span> <span class="nf">attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_or_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Container</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Attaches to a running Docker with a given ID or name.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;attaching to container with ID or name [</span><span class="si">{</span><span class="n">id_or_name</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+        <span class="n">docker_container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">containers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">id_or_name</span><span class="p">)</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">Container</span><span class="p">(</span><span class="n">daemon</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">docker</span><span class="o">=</span><span class="n">docker_container</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;attached to container [</span><span class="si">{</span><span class="n">container</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">container</span></div>
+
+<div class="viewcode-block" id="DockerDaemon.provision"><a class="viewcode-back" href="../../dockerblade.daemon.html#dockerblade.daemon.DockerDaemon.provision">[docs]</a>    <span class="k">def</span> <span class="nf">provision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">image</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                  <span class="n">command</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="o">*</span><span class="p">,</span>
+                  <span class="n">entrypoint</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">environment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">network_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bridge&#39;</span><span class="p">,</span>
+                  <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">ports</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">user</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">volumes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Container</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a Docker container from a given image.</span>
+
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">        image: str</span>
+<span class="sd">            The name of the Docker image that should be used.</span>
+<span class="sd">        command: str</span>
+<span class="sd">            The command that should be run inside the container. If no</span>
+<span class="sd">            command is given, the default command for the Docker image will</span>
+<span class="sd">            be used instead.</span>
+<span class="sd">        name: str, optional</span>
+<span class="sd">            The name that should be given to the Docker container. If no name</span>
+<span class="sd">            is given, Docker will automatically generate one instead.</span>
+<span class="sd">        user: str, optional</span>
+<span class="sd">            The user that should be used by the container. If none is given,</span>
+<span class="sd">            the default user for that container image will be used.</span>
+<span class="sd">        entrypoint: str, optional</span>
+<span class="sd">            The entrypoint that should be used by the container. If none is</span>
+<span class="sd">            given, the default entrypoint for the image will be used.</span>
+<span class="sd">        environment: Mapping[str, str], optional</span>
+<span class="sd">            An optional set of additional environment variables, indexed by</span>
+<span class="sd">            name, that should be used by the system.</span>
+<span class="sd">        volumes: Mapping[str, str], optional</span>
+<span class="sd">            An optional set of volumes that should be mounted inside the</span>
+<span class="sd">            container, specified as a dictionary where keys represent a host</span>
+<span class="sd">            path or volume name, and values are a dictionary containing</span>
+<span class="sd">            the following keys: :code:`bind`, the path to mount the volume</span>
+<span class="sd">            inside the container, and :code:`mode`, specifies whether the</span>
+<span class="sd">            mount should be read-write :code:`rw` or read-only :code:`ro`.</span>
+<span class="sd">        ports: Mapping[int, int], optional</span>
+<span class="sd">            An optional dictionary specifying port mappings between the host</span>
+<span class="sd">            and container, where keys represent container ports and values</span>
+<span class="sd">            represent host ports.</span>
+<span class="sd">        network_mode: str</span>
+<span class="sd">            Specifies the networking mode that should be used by the</span>
+<span class="sd">            container. Can be either :code:`bridge`, :code`none`,</span>
+<span class="sd">            :code:`container:&lt;name|id&gt;`, or :code:`host`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Container</span>
+<span class="sd">            An interface to the newly launched container.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;provisioning container for image [</span><span class="si">{</span><span class="n">image</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+        <span class="n">docker_container</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">containers</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">image</span><span class="p">,</span>
+                                       <span class="n">command</span><span class="o">=</span><span class="n">command</span><span class="p">,</span>
+                                       <span class="n">stdin_open</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                       <span class="n">detach</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                       <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                       <span class="n">entrypoint</span><span class="o">=</span><span class="n">entrypoint</span><span class="p">,</span>
+                                       <span class="n">environment</span><span class="o">=</span><span class="n">environment</span><span class="p">,</span>
+                                       <span class="n">ports</span><span class="o">=</span><span class="n">ports</span><span class="p">,</span>
+                                       <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+                                       <span class="n">volumes</span><span class="o">=</span><span class="n">volumes</span><span class="p">,</span>
+                                       <span class="n">network_mode</span><span class="o">=</span><span class="n">network_mode</span><span class="p">)</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">docker_container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;provisioned container [</span><span class="si">{</span><span class="n">container</span><span class="si">}</span><span class="s2">]&quot;</span>
+                     <span class="sa">f</span><span class="s2">&quot; for image [</span><span class="si">{</span><span class="n">image</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">container</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Dockerblade  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Christopher Steven Timperley.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

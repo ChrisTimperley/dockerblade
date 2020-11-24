@@ -1,0 +1,516 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dockerblade.files module &#8212; Dockerblade  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="dockerblade.popen module" href="dockerblade.popen.html" />
+    <link rel="prev" title="dockerblade.exceptions module" href="dockerblade.exceptions.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.popen.html" title="dockerblade.popen module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.exceptions.html" title="dockerblade.exceptions module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Dockerblade  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dockerblade.exceptions.html"
+                        title="previous chapter">dockerblade.exceptions module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dockerblade.popen.html"
+                        title="next chapter">dockerblade.popen module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dockerblade.files.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-dockerblade.files">
+<span id="dockerblade-files-module"></span><h1>dockerblade.files module<a class="headerlink" href="#module-dockerblade.files" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="dockerblade.files.FileSystem">
+<em class="property">class </em><code class="sig-prename descclassname">dockerblade.files.</code><code class="sig-name descname">FileSystem</code><span class="sig-paren">(</span><em class="sig-param">container</em>, <em class="sig-param">shell</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Provides access to a Docker filesystem.</p>
+<dl class="simple">
+<dt>container: Container</dt><dd><p>The container to which this filesystem belongs.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.access">
+<code class="sig-name descname">access</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">mode</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.access"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.access" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether the user for the shell has access to perform a
+given operation (e.g., existence, read, write, execute) at a path.</p>
+<dl class="simple">
+<dt>path: str</dt><dd><p>The file or directory that should be checked for access.</p>
+</dd>
+<dt>mode:</dt><dd><p>The mode that should be checked. Must be either <code class="code docutils literal notranslate"><span class="pre">F_OK</span></code>
+or the inclusive OR of one or more of <code class="code docutils literal notranslate"><span class="pre">os.R_OK</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">os.W_OK</span></code>, and <code class="code docutils literal notranslate"><span class="pre">os.X_OK</span></code>.</p>
+</dd>
+</dl>
+<p><code class="code docutils literal notranslate"><span class="pre">True</span></code> if access is allowed, <code class="code docutils literal notranslate"><span class="pre">False</span></code> if not.</p>
+<p><a class="reference external" href="https://docs.python.org/3/library/os.html#os.access">https://docs.python.org/3/library/os.html#os.access</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dockerblade.files.FileSystem.container">
+<code class="sig-name descname">container</code><a class="headerlink" href="#dockerblade.files.FileSystem.container" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.copy_from_host">
+<code class="sig-name descname">copy_from_host</code><span class="sig-paren">(</span><em class="sig-param">path_host</em>, <em class="sig-param">path_container</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.copy_from_host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.copy_from_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies a given file or directory tree from the host to the container.</p>
+<dl class="simple">
+<dt>fn_host: str</dt><dd><p>the file or directory tree that should be copied from the host.</p>
+</dd>
+<dt>fn_container: str</dt><dd><p>the destination path on the container.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ContainerFileNotFound</dt><dd><p>if no file or directory exists at the given path inside the
+container.</p>
+</dd>
+<dt>HostFileNotFound</dt><dd><p>if the parent directory of the host filepath does not exist.</p>
+</dd>
+<dt>CopyFailed</dt><dd><p>if the copy operation failed.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.copy_to_host">
+<code class="sig-name descname">copy_to_host</code><span class="sig-paren">(</span><em class="sig-param">path_container</em>, <em class="sig-param">path_host</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.copy_to_host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.copy_to_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies a given file or directory tree from the container to the host.</p>
+<dl class="simple">
+<dt>path_container: str</dt><dd><p>the file that should be copied from the container.</p>
+</dd>
+<dt>path_host: str</dt><dd><p>the destination filepath on the host.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ContainerFileNotFound</dt><dd><p>if no file or directory exists at the given path inside the
+container.</p>
+</dd>
+<dt>HostFileNotFound</dt><dd><p>if the parent directory of the host filepath does not exist.</p>
+</dd>
+<dt>CopyFailed</dt><dd><p>if the copy operation failed.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.exists">
+<code class="sig-name descname">exists</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether a file or directory exists at the given path.
+Inspired by <code class="xref py py-meth docutils literal notranslate"><span class="pre">os.path.exists()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.find">
+<code class="sig-name descname">find</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.find" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of files that match a provided filename in a given
+directory, recursively.</p>
+<dl class="simple">
+<dt>path: str</dt><dd><p>absolute path to the directory.</p>
+</dd>
+<dt>filename: str</dt><dd><p>the name of the file to match.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>List[str]</dt><dd><p>A list of matching files, given by their absolute paths.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ContainerFileNotFound</dt><dd><p>If the given path belongs to a file.</p>
+</dd>
+<dt>IsNotADirectoryError</dt><dd><p>If the given path is not a directory.</p>
+</dd>
+<dt>UnexpectedError</dt><dd><p>If an unexpected error occurred during the find operation.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.isdir">
+<code class="sig-name descname">isdir</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.isdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.isdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether a directory exists at a given path.
+Inspired by <code class="xref py py-meth docutils literal notranslate"><span class="pre">os.path.dir()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.isfile">
+<code class="sig-name descname">isfile</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.isfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.isfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether a regular file exists at a given path.
+Inspired by <code class="xref py py-meth docutils literal notranslate"><span class="pre">os.path.isfile()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.islink">
+<code class="sig-name descname">islink</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.islink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.islink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether a symbolic link exists at a given path.
+Inspired by <code class="xref py py-meth docutils literal notranslate"><span class="pre">os.path.islink()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.listdir">
+<code class="sig-name descname">listdir</code><span class="sig-paren">(</span><em class="sig-param">directory</em>, <em class="sig-param">*</em>, <em class="sig-param">absolute=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.listdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.listdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of the files belonging to a given directory.
+Inspired by <code class="xref py py-meth docutils literal notranslate"><span class="pre">os.listdir()</span></code>.</p>
+<dl class="simple">
+<dt>directory: str</dt><dd><p>absolute path to the directory.</p>
+</dd>
+<dt>absolute: bool</dt><dd><p>if <code class="code docutils literal notranslate"><span class="pre">True</span></code>, returns a list of absolute paths;
+if <code class="code docutils literal notranslate"><span class="pre">False</span></code>, returns a list of relative paths.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>exceptions.IsNotADirectoryError</dt><dd><p>if the given path isn’t a directory.</p>
+</dd>
+<dt>exceptions.ContainerFileNotFound</dt><dd><p>if the given path is not a file or directory.</p>
+</dd>
+<dt>exceptions.CalledProcessError</dt><dd><p>if an unexpected error occurred during execution of this command</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.makedirs">
+<code class="sig-name descname">makedirs</code><span class="sig-paren">(</span><em class="sig-param">d</em>, <em class="sig-param">exist_ok=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.makedirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.makedirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively creates a directory at a given path, creating any missing
+intermediate directories along the way.
+Inspired by <code class="xref py py-meth docutils literal notranslate"><span class="pre">os.makedirs()</span></code>.</p>
+<dl class="simple">
+<dt>d: str</dt><dd><p>the path to the directory.</p>
+</dd>
+<dt>exist_ok: bool</dt><dd><p>specifies whether or not an exception should be raised if the
+given directory already exists.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ContainerFileAlreadyExists</dt><dd><p>if either (a) <cite>exist_ok=False</cite> and a directory already exists at
+the given path, or (b) a file already exists at the given path.</p>
+</dd>
+<dt>IsNotADirectoryError</dt><dd><p>if the parent directory isn’t a directory.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.mkdir">
+<code class="sig-name descname">mkdir</code><span class="sig-paren">(</span><em class="sig-param">directory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.mkdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.mkdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a directory at a given path.
+Inspired by <code class="xref py py-meth docutils literal notranslate"><span class="pre">os.mkdir()</span></code>.</p>
+<dl class="simple">
+<dt>IsNotADirectoryError</dt><dd><p>if the parent directory isn’t a directory.</p>
+</dd>
+<dt>ContainerFileNotFound</dt><dd><p>if the parent directory doesn’t exist.</p>
+</dd>
+<dt>ContainerFileAlreadyExists</dt><dd><p>if a file or directory already exist at the given path.</p>
+</dd>
+<dt>UnexpectedError</dt><dd><p>if an unexpected error occurred.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.mktemp">
+<code class="sig-name descname">mktemp</code><span class="sig-paren">(</span><em class="sig-param">suffix=None</em>, <em class="sig-param">prefix=None</em>, <em class="sig-param">dirname=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.mktemp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.mktemp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a temporary file.
+Inspired by <code class="xref py py-class docutils literal notranslate"><span class="pre">tempfile.mktemp</span></code>.</p>
+<dl class="simple">
+<dt>suffix: str, optional</dt><dd><p>an optional suffix for the filename.</p>
+</dd>
+<dt>prefix: str, optional</dt><dd><p>an optional prefix for the filename.</p>
+</dd>
+<dt>dirname: str, optional</dt><dd><p>if specified, the temporary file will be created in the given
+directory.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ContainerFileNotFound:</dt><dd><p>if specified directory does not exist.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>str</dt><dd><p>The absolute path of the temporary file.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.patch">
+<code class="sig-name descname">patch</code><span class="sig-paren">(</span><em class="sig-param">context</em>, <em class="sig-param">diff</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempts to atomically apply a given patch to the filesystem.</p>
+<p>Note that this operation is atomic: That is, the patch will either
+be applied in its entirety and the method will return <code class="code docutils literal notranslate"><span class="pre">None</span></code>,
+or no changes will be applied to the filesystem and an exception
+will be thrown.</p>
+<dl class="simple">
+<dt>context: str</dt><dd><p>The file or directory to which the patch should be applied.</p>
+</dd>
+<dt>diff: str</dt><dd><p>The contents of patch, given in a unified diff format.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If the given context is not an absolute path.</p>
+</dd>
+<dt>CalledProcessError</dt><dd><p>If an error occurred during the application of the patch.</p>
+</dd>
+<dt>ContainerFileNotFoundError</dt><dd><p>If the given context is neither a file or directory.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.read">
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">binary=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the contents of a given file.</p>
+<dl class="simple">
+<dt>filename: str</dt><dd><p>absolute path to the file.</p>
+</dd>
+<dt>binary: bool</dt><dd><p>if <code class="code docutils literal notranslate"><span class="pre">True</span></code>, read the binary contents of the file; otherwise,
+treat the file as a text file.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ContainerFileNotFound</dt><dd><p>If no file exists at the given path.</p>
+</dd>
+<dt>IsADirectoryError</dt><dd><p>If <code class="code docutils literal notranslate"><span class="pre">filename</span></code> is a directory.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.remove">
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a given file.
+Inspired by <code class="xref py py-meth docutils literal notranslate"><span class="pre">os.remove()</span></code>.</p>
+<p>Does not handle permissions errors.</p>
+<dl class="simple">
+<dt>ContainerFileNotFound</dt><dd><p>if the given file does not exist.</p>
+</dd>
+<dt>IsADirectoryError</dt><dd><p>if the given path is a directory.</p>
+</dd>
+<dt>UnexpectedError</dt><dd><p>if an unexpected failure occurs.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.rmdir">
+<code class="sig-name descname">rmdir</code><span class="sig-paren">(</span><em class="sig-param">directory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.rmdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.rmdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a given directory.
+Inspired by <code class="xref py py-meth docutils literal notranslate"><span class="pre">os.rmdir()</span></code>.</p>
+<p>Does not handle permissions errors.</p>
+<dl class="simple">
+<dt>ContainerFileNotFound</dt><dd><p>if the given directory does not exist.</p>
+</dd>
+<dt>IsNotADirectoryError</dt><dd><p>if the given path is not a directory.</p>
+</dd>
+<dt>OSError</dt><dd><p>if the given directory is not empty.</p>
+</dd>
+<dt>UnexpectedError</dt><dd><p>an unexpected failure occurred.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.tempfile">
+<code class="sig-name descname">tempfile</code><span class="sig-paren">(</span><em class="sig-param">suffix=None</em>, <em class="sig-param">prefix=None</em>, <em class="sig-param">dirname=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.tempfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.tempfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a temporary file within a context.</p>
+<p>Upon exiting the context, the temporary file will be destroyed.
+Inspired by <code class="xref py py-class docutils literal notranslate"><span class="pre">tempfile.TemporaryFile</span></code>.</p>
+<p>Accepts the same arguments as <a class="reference internal" href="#dockerblade.files.FileSystem.mktemp" title="dockerblade.files.FileSystem.mktemp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mktemp()</span></code></a>.</p>
+<dl class="simple">
+<dt>str</dt><dd><p>The absolute path of the temporary file.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.files.FileSystem.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">contents</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/files.html#FileSystem.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.files.FileSystem.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes to a given file.</p>
+<dl class="simple">
+<dt>filename: str</dt><dd><p>absolute path to the file.</p>
+</dd>
+<dt>contents: Union[str, bytes]</dt><dd><p>the text or binary contents of the file.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.popen.html" title="dockerblade.popen module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.exceptions.html" title="dockerblade.exceptions module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Dockerblade  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Christopher Steven Timperley.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

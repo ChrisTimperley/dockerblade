@@ -1,0 +1,460 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dockerblade.shell &#8212; Dockerblade  documentation</title>
+    <link rel="stylesheet" href="../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Dockerblade  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for dockerblade.shell</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Shell&#39;</span><span class="p">,</span> <span class="s1">&#39;CompletedProcess&#39;</span><span class="p">,</span> <span class="s1">&#39;CalledProcessError&#39;</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">overload</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">psutil</span>
+
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">CalledProcessError</span><span class="p">,</span> <span class="n">EnvNotFoundError</span><span class="p">,</span>
+                         <span class="n">ContainerFileNotFound</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.popen</span> <span class="kn">import</span> <span class="n">Popen</span>
+<span class="kn">from</span> <span class="nn">.stopwatch</span> <span class="kn">import</span> <span class="n">Stopwatch</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">quote_container</span>
+
+<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">.container</span> <span class="kn">import</span> <span class="n">Container</span>
+
+
+<div class="viewcode-block" id="CompletedProcess"><a class="viewcode-back" href="../../dockerblade.shell.html#dockerblade.shell.CompletedProcess">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CompletedProcess</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Stores the result of a completed process.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args: str</span>
+<span class="sd">        The arguments that were used to launch the process.</span>
+<span class="sd">    returncode: int</span>
+<span class="sd">        The returncode that was produced by the process.</span>
+<span class="sd">    duration: float</span>
+<span class="sd">        The number of seconds taken to complete the process.</span>
+<span class="sd">    output: T, optional</span>
+<span class="sd">        The output, if any, that was produced by the process.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">args</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">returncode</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]</span>
+
+<div class="viewcode-block" id="CompletedProcess.check_returncode"><a class="viewcode-back" href="../../dockerblade.shell.html#dockerblade.shell.CompletedProcess.check_returncode">[docs]</a>    <span class="k">def</span> <span class="nf">check_returncode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Raises a CalledProcessError if returncode is non-zero.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        CalledProcessError</span>
+<span class="sd">            If the return code is non-zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CalledProcessError</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span>
+                                     <span class="n">returncode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span>
+                                     <span class="n">duration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                                     <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Shell"><a class="viewcode-back" href="../../dockerblade.shell.html#dockerblade.shell.Shell">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">hash</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Shell</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Provides shell access to a Docker container.</span>
+<span class="sd">    Do not directly call the constructor to create shells. Instead, use the</span>
+<span class="sd">    :method:`shell` method of :class:`Container` to build a shell.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    container: Container</span>
+<span class="sd">        The container to which the shell is attached.</span>
+<span class="sd">    path: str</span>
+<span class="sd">        The absolute path to the binary (inside the container) that should be</span>
+<span class="sd">        used to provide this shell.</span>
+<span class="sd">    _sources: Sequence[str]</span>
+<span class="sd">        A sequence of files, given by their absolute paths, that should be</span>
+<span class="sd">        sourced by the shell upon construction.</span>
+<span class="sd">    _environment: Mapping[str, str]</span>
+<span class="sd">        A mapping from the names of environment variables to their values.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ContainerFileNotFound</span>
+<span class="sd">        If a given source file is not found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">container</span><span class="p">:</span> <span class="s1">&#39;Container&#39;</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">_sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">tuple</span><span class="p">)</span>
+    <span class="n">_environment</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_sources&#39;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_environment&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_environment</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">:</span>
+            <span class="n">filesystem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">filesystem</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">filesystem</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">ContainerFileNotFound</span><span class="p">(</span><span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                <span class="n">path</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
+
+            <span class="n">command</span> <span class="o">=</span> <span class="s1">&#39; &amp;&amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;. </span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s1"> &gt; /dev/null 2&gt; /dev/null&#39;</span> <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sources</span><span class="p">])</span>  <span class="c1"># noqa</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="s1">&#39; &amp;&amp; env&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="s1">&#39;env&#39;</span>
+
+        <span class="c1"># store the state of the environment</span>
+        <span class="n">env</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">env_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">env_line</span> <span class="ow">in</span> <span class="n">env_output</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">separator</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">env_line</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+            <span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="c1"># ignore the PWD variable</span>
+        <span class="k">if</span> <span class="s1">&#39;PWD&#39;</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">env</span><span class="p">[</span><span class="s1">&#39;PWD&#39;</span><span class="p">]</span>
+
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_environment&#39;</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_local_to_host_pid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pid_local</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Finds the host PID for a process inside this shell.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pid_local: int</span>
+<span class="sd">            The PID of the process inside the container.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            The PID of the same process on the host machine.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span>
+        <span class="n">ctr_pids</span> <span class="o">=</span> <span class="p">[</span><span class="n">container</span><span class="o">.</span><span class="n">pid</span><span class="p">]</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">_info</span>
+        <span class="n">ctr_pids</span> <span class="o">+=</span> \
+            <span class="p">[</span><span class="n">container</span><span class="o">.</span><span class="n">_exec_id_to_host_pid</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;ExecIDs&#39;</span><span class="p">]]</span>
+
+        <span class="c1"># obtain a list of all processes inside this container</span>
+        <span class="n">ctr_procs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">psutil</span><span class="o">.</span><span class="n">Process</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">ctr_pids</span><span class="p">:</span>
+            <span class="n">proc</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+            <span class="n">ctr_procs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
+            <span class="n">ctr_procs</span> <span class="o">+=</span> <span class="n">proc</span><span class="o">.</span><span class="n">children</span><span class="p">(</span><span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># read /proc/PID/status to find the namespace mapping</span>
+        <span class="k">for</span> <span class="n">proc</span> <span class="ow">in</span> <span class="n">ctr_procs</span><span class="p">:</span>
+            <span class="n">fn_proc</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;/proc/</span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s1">/status&#39;</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn_proc</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh_proc</span><span class="p">:</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;NSpid&#39;</span><span class="p">),</span>
+                               <span class="n">fh_proc</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">proc_host_pid</span><span class="p">,</span> <span class="n">proc_local_pid</span> <span class="o">=</span> \
+                        <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]]</span>
+                    <span class="k">if</span> <span class="n">proc_local_pid</span> <span class="o">==</span> <span class="n">pid_local</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">proc_host_pid</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_instrument</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                    <span class="o">*</span><span class="p">,</span>
+                    <span class="n">time_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">kill_after</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">quote_container</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;instrumenting command: </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1"> -c </span><span class="si">{</span><span class="n">q</span><span class="p">(</span><span class="n">command</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">time_limit</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;timeout --kill-after=</span><span class="si">{</span><span class="n">kill_after</span><span class="si">}</span><span class="s1"> &#39;</span>
+                       <span class="sa">f</span><span class="s1">&#39;--signal=SIGTERM </span><span class="si">{</span><span class="n">time_limit</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;instrumented command: </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">command</span>
+
+<div class="viewcode-block" id="Shell.send_signal"><a class="viewcode-back" href="../../dockerblade.shell.html#dockerblade.shell.Shell.send_signal">[docs]</a>    <span class="k">def</span> <span class="nf">send_signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sig</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># FIXME run as root!</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sending signal </span><span class="si">{</span><span class="n">sig</span><span class="si">}</span><span class="s2"> to process </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;kill -</span><span class="si">{</span><span class="n">sig</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Shell.environ"><a class="viewcode-back" href="../../dockerblade.shell.html#dockerblade.shell.Shell.environ">[docs]</a>    <span class="k">def</span> <span class="nf">environ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reads the value of a given environment variable inside this shell.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        EnvNotFoundError</span>
+<span class="sd">            if no environment variable exists with the given name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_environment</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EnvNotFoundError</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span></div>
+
+<div class="viewcode-block" id="Shell.check_call"><a class="viewcode-back" href="../../dockerblade.shell.html#dockerblade.shell.Shell.check_call">[docs]</a>    <span class="k">def</span> <span class="nf">check_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                   <span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                   <span class="o">*</span><span class="p">,</span>
+                   <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span>
+                   <span class="n">time_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">kill_after</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+                   <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Executes a given commands, blocks until its completion, and checks</span>
+<span class="sd">        that the return code is zero.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        CalledProcessError</span>
+<span class="sd">            If the command produced a non-zero return code.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">)</span><span class="o">.</span><span class="n">check_returncode</span><span class="p">()</span></div>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">check_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                     <span class="o">*</span><span class="p">,</span>
+                     <span class="n">stderr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                     <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span>
+                     <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+                     <span class="n">text</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+                     <span class="n">time_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                     <span class="n">kill_after</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+                     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">check_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                     <span class="o">*</span><span class="p">,</span>
+                     <span class="n">stderr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                     <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span>
+                     <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+                     <span class="n">text</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+                     <span class="n">time_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                     <span class="n">kill_after</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+                     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="o">...</span>
+
+<div class="viewcode-block" id="Shell.check_output"><a class="viewcode-back" href="../../dockerblade.shell.html#dockerblade.shell.Shell.check_output">[docs]</a>    <span class="k">def</span> <span class="nf">check_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                     <span class="o">*</span><span class="p">,</span>
+                     <span class="n">stderr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                     <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span>
+                     <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+                     <span class="n">text</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                     <span class="n">time_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                     <span class="n">kill_after</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+                     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Executes a given commands, blocks until its completion, and checks</span>
+<span class="sd">        that the return code is zero.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            The output of the command execution.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        CalledProcessError</span>
+<span class="sd">            If the command produced a non-zero return code.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">args</span><span class="p">,</span>
+                          <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span>
+                          <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span>
+                          <span class="n">stdout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">stderr</span><span class="o">=</span><span class="n">stderr</span><span class="p">,</span>
+                          <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">check_returncode</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">output</span></div>
+
+<div class="viewcode-block" id="Shell.run"><a class="viewcode-back" href="../../dockerblade.shell.html#dockerblade.shell.Shell.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="o">*</span><span class="p">,</span>
+            <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+            <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span>
+            <span class="n">text</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">stdout</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">stderr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">time_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">kill_after</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompletedProcess</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Executes a given command and blocks until its completion.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args: str</span>
+<span class="sd">            The command that should be executed.</span>
+<span class="sd">        encoding: str</span>
+<span class="sd">            The encoding that should be used for decoding, if the output of</span>
+<span class="sd">            the process is text rather than binary.</span>
+<span class="sd">        cwd: str</span>
+<span class="sd">            The absolute path of the directory in the container where this</span>
+<span class="sd">            command should be executed.</span>
+<span class="sd">        text: bool</span>
+<span class="sd">            If :code:`True`, the output of the process is decoded to a string</span>
+<span class="sd">            using the provided :param:`encoding`. If :code:`False`, the output</span>
+<span class="sd">            of the process will be treated as binary.</span>
+<span class="sd">        stderr: bool</span>
+<span class="sd">            If :code:`True`, the stderr will be included in the output.</span>
+<span class="sd">        stdout: bool</span>
+<span class="sd">            If :code:`True`, the stdout will be included in the output.</span>
+<span class="sd">        time_limit: int, optional</span>
+<span class="sd">            The maximum number of seconds that the command is allowed to run</span>
+<span class="sd">            before being terminated via SIGTERM. If unspecified, no time limit</span>
+<span class="sd">            will be imposed on command execution.</span>
+<span class="sd">        kill_after: int</span>
+<span class="sd">            The maximum number of seconds to wait before sending SIGKILL to</span>
+<span class="sd">            the process after attempting termination via SIGTERM. Only applies</span>
+<span class="sd">            when :code:`time_limit` is specified.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CompletedProcess</span>
+<span class="sd">            A summary of the outcome of the command execution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;executing command: </span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">no_output</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">stdout</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">stderr</span>
+        <span class="n">docker_container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">_docker</span>
+        <span class="n">args_instrumented</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instrument</span><span class="p">(</span><span class="n">args</span><span class="p">,</span>
+                                             <span class="n">time_limit</span><span class="o">=</span><span class="n">time_limit</span><span class="p">,</span>
+                                             <span class="n">kill_after</span><span class="o">=</span><span class="n">kill_after</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">Stopwatch</span><span class="p">()</span> <span class="k">as</span> <span class="n">timer</span><span class="p">:</span>
+            <span class="n">retcode</span><span class="p">,</span> <span class="n">output_bin</span> <span class="o">=</span> <span class="n">docker_container</span><span class="o">.</span><span class="n">exec_run</span><span class="p">(</span>
+                <span class="n">args_instrumented</span><span class="p">,</span>
+                <span class="n">detach</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">environment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_environment</span><span class="p">,</span>
+                <span class="n">tty</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">stream</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">socket</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="kc">False</span> <span class="k">if</span> <span class="n">no_output</span> <span class="k">else</span> <span class="n">stderr</span><span class="p">,</span>  <span class="c1"># BUG #25</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="kc">True</span> <span class="k">if</span> <span class="n">no_output</span> <span class="k">else</span> <span class="n">stdout</span><span class="p">,</span>  <span class="c1"># BUG #25</span>
+                <span class="n">workdir</span><span class="o">=</span><span class="n">cwd</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;retcode: </span><span class="si">{</span><span class="n">retcode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">no_output</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">text</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">output_bin</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">output_bin</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">CompletedProcess</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+                                  <span class="n">returncode</span><span class="o">=</span><span class="n">retcode</span><span class="p">,</span>
+                                  <span class="n">duration</span><span class="o">=</span><span class="n">timer</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                                  <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;executed command: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="Shell.popen"><a class="viewcode-back" href="../../dockerblade.shell.html#dockerblade.shell.Shell.popen">[docs]</a>    <span class="k">def</span> <span class="nf">popen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+              <span class="o">*</span><span class="p">,</span>
+              <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span>
+              <span class="n">encoding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+              <span class="n">stdout</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+              <span class="n">stderr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="n">time_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">kill_after</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+              <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Popen</span><span class="p">:</span>
+        <span class="n">docker_api</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">daemon</span><span class="o">.</span><span class="n">api</span>
+        <span class="n">args_instrumented</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instrument</span><span class="p">(</span><span class="n">args</span><span class="p">,</span>
+                                             <span class="n">time_limit</span><span class="o">=</span><span class="n">time_limit</span><span class="p">,</span>
+                                             <span class="n">kill_after</span><span class="o">=</span><span class="n">kill_after</span><span class="p">)</span>
+        <span class="n">exec_response</span> <span class="o">=</span> <span class="n">docker_api</span><span class="o">.</span><span class="n">exec_create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                               <span class="n">args_instrumented</span><span class="p">,</span>
+                                               <span class="n">environment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_environment</span><span class="p">,</span>
+                                               <span class="n">tty</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                               <span class="n">workdir</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span>
+                                               <span class="n">stdout</span><span class="o">=</span><span class="n">stdout</span><span class="p">,</span>
+                                               <span class="n">stderr</span><span class="o">=</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">exec_id</span> <span class="o">=</span> <span class="n">exec_response</span><span class="p">[</span><span class="s1">&#39;Id&#39;</span><span class="p">]</span>
+        <span class="n">exec_stream</span> <span class="o">=</span> <span class="n">docker_api</span><span class="o">.</span><span class="n">exec_start</span><span class="p">(</span><span class="n">exec_id</span><span class="p">,</span>
+                                            <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;started Exec [</span><span class="si">{</span><span class="n">exec_id</span><span class="si">}</span><span class="s1">] for Popen&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Popen</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+                     <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span>
+                     <span class="n">container</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">,</span>
+                     <span class="n">docker_api</span><span class="o">=</span><span class="n">docker_api</span><span class="p">,</span>
+                     <span class="n">exec_id</span><span class="o">=</span><span class="n">exec_id</span><span class="p">,</span>
+                     <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span>
+                     <span class="n">stream</span><span class="o">=</span><span class="n">exec_stream</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Dockerblade  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Christopher Steven Timperley.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

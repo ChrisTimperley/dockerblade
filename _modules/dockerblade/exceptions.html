@@ -1,0 +1,217 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dockerblade.exceptions &#8212; Dockerblade  documentation</title>
+    <link rel="stylesheet" href="../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Dockerblade  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for dockerblade.exceptions</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">typing</span> <span class="k">as</span> <span class="nn">_t</span>
+<span class="kn">import</span> <span class="nn">attr</span> <span class="k">as</span> <span class="nn">_attr</span>
+<span class="kn">import</span> <span class="nn">subprocess</span> <span class="k">as</span> <span class="nn">_subprocess</span>
+
+
+<div class="viewcode-block" id="DockerBladeException"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.DockerBladeException">[docs]</a><span class="k">class</span> <span class="nc">DockerBladeException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Used by all exceptions that are thrown by DockerBlade.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="UnexpectedError"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.UnexpectedError">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">UnexpectedError</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An unexpected error occurred during an operation.&quot;&quot;&quot;</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">error</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="s1">&#39;CalledProcessError&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;An unexpected error occurred: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39; (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">msg</span></div>
+
+
+<div class="viewcode-block" id="EnvNotFoundError"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.EnvNotFoundError">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">EnvNotFoundError</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;No environment variable was found with the given name.&quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;No environment variable found with name: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="CopyFailed"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.CopyFailed">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CopyFailed</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A copy operation failed unexpectedly.&quot;&quot;&quot;</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Copy operation failed: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s1">&#39;</span></div>
+
+
+<div class="viewcode-block" id="IsADirectoryError"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.IsADirectoryError">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">IsADirectoryError</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The given path is a directory but a file was expected.&quot;&quot;&quot;</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Directory exists at path where file is expected: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span></div>
+
+
+<div class="viewcode-block" id="DirectoryNotEmpty"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.DirectoryNotEmpty">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DirectoryNotEmpty</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A given directory is not empty.&quot;&quot;&quot;</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Directory is not empty: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span></div>
+
+
+<div class="viewcode-block" id="IsNotADirectoryError"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.IsNotADirectoryError">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">IsNotADirectoryError</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The given path is not a directory.&quot;&quot;&quot;</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Directory was expected at path: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span></div>
+
+
+<div class="viewcode-block" id="HostFileNotFound"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.HostFileNotFound">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">HostFileNotFound</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;No file was found at a given path on the host machine.&quot;&quot;&quot;</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;File not found [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1">] on host machine&#39;</span></div>
+
+
+<div class="viewcode-block" id="ContainerFileNotFound"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.ContainerFileNotFound">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ContainerFileNotFound</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;No file was found at a given path in a container.&quot;&quot;&quot;</span>
+    <span class="n">container_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;File not found [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1">] &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;in container [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">container_id</span><span class="si">}</span><span class="s1">]&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ContainerFileAlreadyExists"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.ContainerFileAlreadyExists">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ContainerFileAlreadyExists</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A file already exists at a given path inside a container.&quot;&quot;&quot;</span>
+    <span class="n">container_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;File already exists [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1">] &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;in container [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">container_id</span><span class="si">}</span><span class="s1">]&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CalledProcessError"><a class="viewcode-back" href="../../dockerblade.shell.html#dockerblade.exceptions.CalledProcessError">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CalledProcessError</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">,</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Thrown when a process produces a non-zero return code.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cmd: str</span>
+<span class="sd">        The command that was used to launch the process.</span>
+<span class="sd">    returncode: int</span>
+<span class="sd">        The returncode that was produced by the process.</span>
+<span class="sd">    duration: float</span>
+<span class="sd">        The number of seconds that elapsed before the process terminated.</span>
+<span class="sd">    output: T, optional</span>
+<span class="sd">        The output, if any, that was produced by the process.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">returncode</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">output</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">_t</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="TimeoutExpired"><a class="viewcode-back" href="../../dockerblade.exceptions.html#dockerblade.exceptions.TimeoutExpired">[docs]</a><span class="nd">@_attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_exc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TimeoutExpired</span><span class="p">(</span><span class="n">DockerBladeException</span><span class="p">,</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Thrown when a timeout expires while waiting for a process.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cmd: str</span>
+<span class="sd">        The command that was used to launch the process.</span>
+<span class="sd">    timeout: float</span>
+<span class="sd">        The timeout in seconds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Dockerblade  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Christopher Steven Timperley.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,694 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dockerblade.files &#8212; Dockerblade  documentation</title>
+    <link rel="stylesheet" href="../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Dockerblade  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for dockerblade.files</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;FileSystem&#39;</span><span class="p">,)</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">overload</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">attr</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exceptions</span> <span class="k">as</span> <span class="n">exc</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">quote_container</span><span class="p">,</span> <span class="n">quote_host</span>
+
+<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">.shell</span> <span class="kn">import</span> <span class="n">Shell</span>
+    <span class="kn">from</span> <span class="nn">.container</span> <span class="kn">import</span> <span class="n">Container</span>
+
+<span class="n">_ON_WINDOWS</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;nt&#39;</span>
+
+
+<div class="viewcode-block" id="FileSystem"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">FileSystem</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Provides access to a Docker filesystem.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    container: Container</span>
+<span class="sd">        The container to which this filesystem belongs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">container</span><span class="p">:</span> <span class="s1">&#39;Container&#39;</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
+    <span class="n">_shell</span><span class="p">:</span> <span class="s1">&#39;Shell&#39;</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">hash</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FileSystem.copy_from_host"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.copy_from_host">[docs]</a>    <span class="k">def</span> <span class="nf">copy_from_host</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">path_container</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copies a given file or directory tree from the host to the container.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fn_host: str</span>
+<span class="sd">            the file or directory tree that should be copied from the host.</span>
+<span class="sd">        fn_container: str</span>
+<span class="sd">            the destination path on the container.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ContainerFileNotFound</span>
+<span class="sd">            if no file or directory exists at the given path inside the</span>
+<span class="sd">            container.</span>
+<span class="sd">        HostFileNotFound</span>
+<span class="sd">            if the parent directory of the host filepath does not exist.</span>
+<span class="sd">        CopyFailed</span>
+<span class="sd">            if the copy operation failed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">id_container</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path_host</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">HostFileNotFound</span><span class="p">(</span><span class="n">path_host</span><span class="p">)</span>
+
+        <span class="n">path_host_escaped</span> <span class="o">=</span> <span class="n">quote_host</span><span class="p">(</span><span class="n">path_host</span><span class="p">)</span>
+        <span class="n">path_container_escaped</span> <span class="o">=</span> <span class="n">quote_host</span><span class="p">(</span><span class="n">path_container</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_ON_WINDOWS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">path_container_escaped</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">:</span>
+                <span class="n">path_container_escaped</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">path_container_escaped</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+            <span class="k">if</span> <span class="n">path_host_escaped</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">:</span>
+                <span class="n">path_host_escaped</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">path_host_escaped</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+
+        <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;docker cp -L </span><span class="si">{</span><span class="n">path_host_escaped</span><span class="si">}</span><span class="s2"> &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_container</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">path_container_escaped</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+            <span class="n">path_container_parent</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path_container</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path_container_parent</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path_container_parent</span><span class="p">,</span>
+                                                <span class="n">container_id</span><span class="o">=</span><span class="n">id_container</span><span class="p">)</span>
+
+            <span class="n">reason</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;failed to copy file [</span><span class="si">{</span><span class="n">path_host</span><span class="si">}</span><span class="s2">] &quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot;from host to container [</span><span class="si">{</span><span class="n">id_container</span><span class="si">}</span><span class="s2">]: &quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path_container</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">CopyFailed</span><span class="p">(</span><span class="n">reason</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileSystem.copy_to_host"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.copy_to_host">[docs]</a>    <span class="k">def</span> <span class="nf">copy_to_host</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">path_container</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                     <span class="n">path_host</span><span class="p">:</span> <span class="nb">str</span>
+                     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copies a given file or directory tree from the container to the host.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path_container: str</span>
+<span class="sd">            the file that should be copied from the container.</span>
+<span class="sd">        path_host: str</span>
+<span class="sd">            the destination filepath on the host.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ContainerFileNotFound</span>
+<span class="sd">            if no file or directory exists at the given path inside the</span>
+<span class="sd">            container.</span>
+<span class="sd">        HostFileNotFound</span>
+<span class="sd">            if the parent directory of the host filepath does not exist.</span>
+<span class="sd">        CopyFailed</span>
+<span class="sd">            if the copy operation failed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">id_container</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">path_host_parent</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path_host</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path_host_parent</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">HostFileNotFound</span><span class="p">(</span><span class="n">path_host_parent</span><span class="p">)</span>
+
+        <span class="n">path_host_escaped</span> <span class="o">=</span> <span class="n">quote_host</span><span class="p">(</span><span class="n">path_host</span><span class="p">)</span>
+        <span class="n">path_container_escaped</span> <span class="o">=</span> <span class="n">quote_host</span><span class="p">(</span><span class="n">path_container</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_ON_WINDOWS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">path_container_escaped</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">:</span>
+                <span class="n">path_container_escaped</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">path_container_escaped</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+            <span class="k">if</span> <span class="n">path_host_escaped</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">:</span>
+                <span class="n">path_host_escaped</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">path_host_escaped</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+
+        <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;docker cp -L &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_container</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">path_container_escaped</span><span class="si">}</span><span class="s2"> &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path_host_escaped</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path_container</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path_container</span><span class="p">,</span>
+                                                <span class="n">container_id</span><span class="o">=</span><span class="n">id_container</span><span class="p">)</span>
+
+            <span class="n">reason</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;failed to copy file [</span><span class="si">{</span><span class="n">path_container</span><span class="si">}</span><span class="s2">] &quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot;from container [</span><span class="si">{</span><span class="n">id_container</span><span class="si">}</span><span class="s2">] to host: &quot;</span>
+                      <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path_host</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">CopyFailed</span><span class="p">(</span><span class="n">reason</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileSystem.remove"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Removes a given file.</span>
+<span class="sd">        Inspired by :meth:`os.remove`.</span>
+
+<span class="sd">        Warning</span>
+<span class="sd">        -------</span>
+<span class="sd">        Does not handle permissions errors.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ContainerFileNotFound</span>
+<span class="sd">            if the given file does not exist.</span>
+<span class="sd">        IsADirectoryError</span>
+<span class="sd">            if the given path is a directory.</span>
+<span class="sd">        UnexpectedError</span>
+<span class="sd">            if an unexpected failure occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;rm </span><span class="si">{</span><span class="n">quote_container</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">exc</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+                                                <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">IsADirectoryError</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">UnexpectedError</span><span class="p">(</span><span class="s1">&#39;failed to remove&#39;</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span></div>
+
+<div class="viewcode-block" id="FileSystem.rmdir"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.rmdir">[docs]</a>    <span class="k">def</span> <span class="nf">rmdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Removes a given directory.</span>
+<span class="sd">        Inspired by :meth:`os.rmdir`.</span>
+
+<span class="sd">        Warning</span>
+<span class="sd">        -------</span>
+<span class="sd">        Does not handle permissions errors.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ContainerFileNotFound</span>
+<span class="sd">            if the given directory does not exist.</span>
+<span class="sd">        IsNotADirectoryError</span>
+<span class="sd">            if the given path is not a directory.</span>
+<span class="sd">        OSError</span>
+<span class="sd">            if the given directory is not empty.</span>
+<span class="sd">        UnexpectedError</span>
+<span class="sd">            an unexpected failure occurred.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">escaped_directory</span> <span class="o">=</span> <span class="n">quote_container</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;test -e </span><span class="si">{</span><span class="n">escaped_directory</span><span class="si">}</span><span class="s1"> || exit 50 &amp;&amp; &#39;</span>
+                   <span class="sa">f</span><span class="s1">&#39;test -d </span><span class="si">{</span><span class="n">escaped_directory</span><span class="si">}</span><span class="s1"> || exit 51 &amp;&amp; &#39;</span>
+                   <span class="sa">f</span><span class="s1">&#39;rmdir </span><span class="si">{</span><span class="n">escaped_directory</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">exc</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">50</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span>
+                                                <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">51</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">IsNotADirectoryError</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">directory</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">output</span> <span class="ow">and</span> <span class="s1">&#39;Directory not empty&#39;</span> <span class="ow">in</span> <span class="n">error</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">DirectoryNotEmpty</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">directory</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">UnexpectedError</span><span class="p">(</span><span class="s1">&#39;failed to remove directory&#39;</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span>  <span class="c1"># noqa</span></div>
+
+<div class="viewcode-block" id="FileSystem.write"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">contents</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Writes to a given file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename: str</span>
+<span class="sd">            absolute path to the file.</span>
+<span class="sd">        contents: Union[str, bytes]</span>
+<span class="sd">            the text or binary contents of the file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;wb&#39;</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">contents</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;w&#39;</span>
+        <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span>
+                                            <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="c1"># write to a temporary file on the host and copy to container</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">host_temp_dir</span><span class="p">:</span>
+            <span class="n">temp_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">host_temp_dir</span><span class="p">,</span> <span class="s1">&#39;contents&#39;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">temp_filename</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">copy_from_host</span><span class="p">(</span><span class="n">temp_filename</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">binary</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">binary</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="o">...</span>
+
+<div class="viewcode-block" id="FileSystem.read"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">binary</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Reads the contents of a given file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename: str</span>
+<span class="sd">            absolute path to the file.</span>
+<span class="sd">        binary: bool</span>
+<span class="sd">            if :code:`True`, read the binary contents of the file; otherwise,</span>
+<span class="sd">            treat the file as a text file.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ContainerFileNotFound</span>
+<span class="sd">            If no file exists at the given path.</span>
+<span class="sd">        IsADirectoryError</span>
+<span class="sd">            If :code:`filename` is a directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;rb&#39;</span> <span class="k">if</span> <span class="n">binary</span> <span class="k">else</span> <span class="s1">&#39;r&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">IsADirectoryError</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">host_temp_dir</span><span class="p">:</span>
+            <span class="n">filename_host_temp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">host_temp_dir</span><span class="p">,</span> <span class="s1">&#39;contents&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">copy_to_host</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">filename_host_temp</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename_host_temp</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FileSystem.find"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.find">[docs]</a>    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of files that match a provided filename in a given</span>
+<span class="sd">        directory, recursively.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path: str</span>
+<span class="sd">            absolute path to the directory.</span>
+<span class="sd">        filename: str</span>
+<span class="sd">            the name of the file to match.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List[str]</span>
+<span class="sd">            A list of matching files, given by their absolute paths.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ContainerFileNotFound</span>
+<span class="sd">            If the given path belongs to a file.</span>
+<span class="sd">        IsNotADirectoryError</span>
+<span class="sd">            If the given path is not a directory.</span>
+<span class="sd">        UnexpectedError</span>
+<span class="sd">            If an unexpected error occurred during the find operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO execute as root</span>
+        <span class="n">path_escaped</span> <span class="o">=</span> <span class="n">quote_container</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;test ! -e </span><span class="si">{</span><span class="n">path_escaped</span><span class="si">}</span><span class="s1"> &amp;&amp; exit 50 || &#39;</span>
+                   <span class="sa">f</span><span class="s1">&#39;test ! -d </span><span class="si">{</span><span class="n">path_escaped</span><span class="si">}</span><span class="s1"> &amp;&amp; exit 51 || &#39;</span>
+                   <span class="sa">f</span><span class="s1">&#39;find </span><span class="si">{</span><span class="n">path_escaped</span><span class="si">}</span><span class="s1"> -name </span><span class="si">{</span><span class="n">quote_container</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">exc</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">50</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                                                <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span>  <span class="c1"># noqa</span>
+            <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">51</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">IsNotADirectoryError</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">UnexpectedError</span><span class="p">(</span><span class="s1">&#39;find failed&#39;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">error</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span>
+
+        <span class="n">paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">paths</span></div>
+
+<div class="viewcode-block" id="FileSystem.makedirs"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.makedirs">[docs]</a>    <span class="k">def</span> <span class="nf">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exist_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Recursively creates a directory at a given path, creating any missing</span>
+<span class="sd">        intermediate directories along the way.</span>
+<span class="sd">        Inspired by :meth:`os.makedirs`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        d: str</span>
+<span class="sd">            the path to the directory.</span>
+<span class="sd">        exist_ok: bool</span>
+<span class="sd">            specifies whether or not an exception should be raised if the</span>
+<span class="sd">            given directory already exists.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ContainerFileAlreadyExists</span>
+<span class="sd">            if either (a) `exist_ok=False` and a directory already exists at</span>
+<span class="sd">            the given path, or (b) a file already exists at the given path.</span>
+<span class="sd">        IsNotADirectoryError</span>
+<span class="sd">            if the parent directory isn&#39;t a directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d_parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">exist_ok</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileAlreadyExists</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+                                                 <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>  <span class="c1"># noqa</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileAlreadyExists</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+                                                 <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>  <span class="c1"># noqa</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">d_parent</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">d_parent</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">IsNotADirectoryError</span><span class="p">(</span><span class="n">d_parent</span><span class="p">)</span>
+
+        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;mkdir -p </span><span class="si">{</span><span class="n">quote_container</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">command</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileSystem.exists"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.exists">[docs]</a>    <span class="k">def</span> <span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Determines whether a file or directory exists at the given path.</span>
+<span class="sd">        Inspired by :meth:`os.path.exists`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;test -e </span><span class="si">{</span><span class="n">quote_container</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="FileSystem.mkdir"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.mkdir">[docs]</a>    <span class="k">def</span> <span class="nf">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a directory at a given path.</span>
+<span class="sd">        Inspired by :meth:`os.mkdir`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IsNotADirectoryError</span>
+<span class="sd">            if the parent directory isn&#39;t a directory.</span>
+<span class="sd">        ContainerFileNotFound</span>
+<span class="sd">            if the parent directory doesn&#39;t exist.</span>
+<span class="sd">        ContainerFileAlreadyExists</span>
+<span class="sd">            if a file or directory already exist at the given path.</span>
+<span class="sd">        UnexpectedError</span>
+<span class="sd">            if an unexpected error occurred.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">directory_escaped</span> <span class="o">=</span> <span class="n">quote_container</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+        <span class="n">directory_parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+        <span class="n">directory_parent_escaped</span> <span class="o">=</span> <span class="n">quote_container</span><span class="p">(</span><span class="n">directory_parent</span><span class="p">)</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;test -e </span><span class="si">{</span><span class="n">directory_escaped</span><span class="si">}</span><span class="s2"> &amp;&amp; exit 50 || &quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;test ! -e </span><span class="si">{</span><span class="n">directory_parent_escaped</span><span class="si">}</span><span class="s2"> &amp;&amp; exit 51 || &quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;test ! -d </span><span class="si">{</span><span class="n">directory_parent_escaped</span><span class="si">}</span><span class="s2"> &amp;&amp; exit 52 || &quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;mkdir </span><span class="si">{</span><span class="n">directory_escaped</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">exc</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">50</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileAlreadyExists</span><span class="p">(</span>
+                    <span class="n">path</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span>
+                    <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span>
+            <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">51</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">(</span>
+                    <span class="n">path</span><span class="o">=</span><span class="n">directory_parent</span><span class="p">,</span>
+                    <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span>
+            <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">52</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">IsNotADirectoryError</span><span class="p">(</span><span class="n">directory_parent</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">UnexpectedError</span><span class="p">(</span><span class="s1">&#39;mkdir failed&#39;</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span></div>
+
+<div class="viewcode-block" id="FileSystem.listdir"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.listdir">[docs]</a>    <span class="k">def</span> <span class="nf">listdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="o">*</span><span class="p">,</span>
+                <span class="n">absolute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of the files belonging to a given directory.</span>
+<span class="sd">        Inspired by :meth:`os.listdir`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        directory: str</span>
+<span class="sd">            absolute path to the directory.</span>
+<span class="sd">        absolute: bool</span>
+<span class="sd">            if :code:`True`, returns a list of absolute paths;</span>
+<span class="sd">            if :code:`False`, returns a list of relative paths.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        exceptions.IsNotADirectoryError</span>
+<span class="sd">            if the given path isn&#39;t a directory.</span>
+<span class="sd">        exceptions.ContainerFileNotFound</span>
+<span class="sd">            if the given path is not a file or directory.</span>
+<span class="sd">        exceptions.CalledProcessError</span>
+<span class="sd">            if an unexpected error occurred during execution of this command</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">directory_escaped</span> <span class="o">=</span> <span class="n">quote_container</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;test -e </span><span class="si">{</span><span class="n">directory_escaped</span><span class="si">}</span><span class="s1"> || exit 50 &amp;&amp; &#39;</span>
+                   <span class="sa">f</span><span class="s1">&#39;test -d </span><span class="si">{</span><span class="n">directory_escaped</span><span class="si">}</span><span class="s1"> || exit 51 &amp;&amp; &#39;</span>
+                   <span class="sa">f</span><span class="s1">&#39;ls --color=never -A -1 </span><span class="si">{</span><span class="n">directory_escaped</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">exc</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">50</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span>
+                                                <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>  <span class="c1"># noqa</span>
+            <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">51</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">IsNotADirectoryError</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">directory</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="n">paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">absolute</span><span class="p">:</span>
+            <span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">paths</span></div>
+
+<div class="viewcode-block" id="FileSystem.isfile"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.isfile">[docs]</a>    <span class="k">def</span> <span class="nf">isfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Determines whether a regular file exists at a given path.</span>
+<span class="sd">        Inspired by :meth:`os.path.isfile`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;test -f </span><span class="si">{</span><span class="n">quote_container</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="FileSystem.isdir"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.isdir">[docs]</a>    <span class="k">def</span> <span class="nf">isdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Determines whether a directory exists at a given path.</span>
+<span class="sd">        Inspired by :meth:`os.path.dir`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;test -d </span><span class="si">{</span><span class="n">quote_container</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="FileSystem.islink"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.islink">[docs]</a>    <span class="k">def</span> <span class="nf">islink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Determines whether a symbolic link exists at a given path.</span>
+<span class="sd">        Inspired by :meth:`os.path.islink`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;test -h </span><span class="si">{</span><span class="n">quote_container</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="FileSystem.access"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.access">[docs]</a>    <span class="k">def</span> <span class="nf">access</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Determines whether the user for the shell has access to perform a</span>
+<span class="sd">        given operation (e.g., existence, read, write, execute) at a path.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path: str</span>
+<span class="sd">            The file or directory that should be checked for access.</span>
+<span class="sd">        mode:</span>
+<span class="sd">            The mode that should be checked. Must be either :code:`F_OK`</span>
+<span class="sd">            or the inclusive OR of one or more of :code:`os.R_OK`,</span>
+<span class="sd">            :code:`os.W_OK`, and :code:`os.X_OK`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :code:`True` if access is allowed, :code:`False` if not.</span>
+
+<span class="sd">        Reference</span>
+<span class="sd">        ---------</span>
+<span class="sd">        https://docs.python.org/3/library/os.html#os.access</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">escaped_path</span> <span class="o">=</span> <span class="n">quote_container</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># check for existence of path</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">os</span><span class="o">.</span><span class="n">F_OK</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="n">commands</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">&amp;</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;test -x </span><span class="si">{</span><span class="n">escaped_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">&amp;</span> <span class="n">os</span><span class="o">.</span><span class="n">R_OK</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;test -r </span><span class="si">{</span><span class="n">escaped_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">&amp;</span> <span class="n">os</span><span class="o">.</span><span class="n">W_OK</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;test -w </span><span class="si">{</span><span class="n">escaped_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">commands</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">command</span> <span class="o">=</span> <span class="s1">&#39; &amp;&amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span>
+        <span class="n">outcome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">has_access</span> <span class="o">=</span> <span class="n">outcome</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">has_access</span></div>
+
+<div class="viewcode-block" id="FileSystem.patch"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.patch">[docs]</a>    <span class="k">def</span> <span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">diff</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Attempts to atomically apply a given patch to the filesystem.</span>
+
+<span class="sd">        Note that this operation is atomic: That is, the patch will either</span>
+<span class="sd">        be applied in its entirety and the method will return :code:`None`,</span>
+<span class="sd">        or no changes will be applied to the filesystem and an exception</span>
+<span class="sd">        will be thrown.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        context: str</span>
+<span class="sd">            The file or directory to which the patch should be applied.</span>
+<span class="sd">        diff: str</span>
+<span class="sd">            The contents of patch, given in a unified diff format.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the given context is not an absolute path.</span>
+<span class="sd">        CalledProcessError</span>
+<span class="sd">            If an error occurred during the application of the patch.</span>
+<span class="sd">        ContainerFileNotFoundError</span>
+<span class="sd">            If the given context is neither a file or directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;context must be supplied as an absolute path&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">tempfile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.diff&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fn_diff</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fn_diff</span><span class="p">,</span> <span class="n">diff</span><span class="p">)</span>
+
+            <span class="n">safe_context</span> <span class="o">=</span> <span class="n">quote_container</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+            <span class="n">safe_fn_diff</span> <span class="o">=</span> <span class="n">quote_container</span><span class="p">(</span><span class="n">fn_diff</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;patch -u -p0 -f -i </span><span class="si">{</span><span class="n">safe_fn_diff</span><span class="si">}</span><span class="s1"> -d </span><span class="si">{</span><span class="n">safe_context</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;patch -u -f -i </span><span class="si">{</span><span class="n">safe_fn_diff</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">safe_context</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                                                <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>  <span class="c1"># noqa</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileSystem.mktemp"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.mktemp">[docs]</a>    <span class="k">def</span> <span class="nf">mktemp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">suffix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">dirname</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+               <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a temporary file.</span>
+<span class="sd">        Inspired by :class:`tempfile.mktemp`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        suffix: str, optional</span>
+<span class="sd">            an optional suffix for the filename.</span>
+<span class="sd">        prefix: str, optional</span>
+<span class="sd">            an optional prefix for the filename.</span>
+<span class="sd">        dirname: str, optional</span>
+<span class="sd">            if specified, the temporary file will be created in the given</span>
+<span class="sd">            directory.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ContainerFileNotFound:</span>
+<span class="sd">            if specified directory does not exist.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            The absolute path of the temporary file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">quote_container</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span> <span class="k">if</span> <span class="n">prefix</span> <span class="k">else</span> <span class="s1">&#39;tmp&#39;</span><span class="si">}</span><span class="s2">.XXXXXXXXXX&quot;</span><span class="p">)</span>
+        <span class="n">dirname</span> <span class="o">=</span> <span class="n">dirname</span> <span class="k">if</span> <span class="n">dirname</span> <span class="k">else</span> <span class="s1">&#39;/tmp&#39;</span>
+        <span class="n">cmd_parts</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mktemp&#39;</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="s1">&#39;-p&#39;</span><span class="p">,</span> <span class="n">quote_container</span><span class="p">(</span><span class="n">dirname</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
+                                            <span class="n">container_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd_parts</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">suffix</span><span class="p">:</span>
+            <span class="n">original_filename</span> <span class="o">=</span> <span class="n">filename</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">original_filename</span> <span class="o">+</span> <span class="n">suffix</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;mv </span><span class="si">{</span><span class="n">original_filename</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shell</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">filename</span></div>
+
+<div class="viewcode-block" id="FileSystem.tempfile"><a class="viewcode-back" href="../../dockerblade.files.html#dockerblade.files.FileSystem.tempfile">[docs]</a>    <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+    <span class="k">def</span> <span class="nf">tempfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">suffix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">dirname</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a temporary file within a context.</span>
+
+<span class="sd">        Upon exiting the context, the temporary file will be destroyed.</span>
+<span class="sd">        Inspired by :class:`tempfile.TemporaryFile`.</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        Accepts the same arguments as :meth:`mktemp`.</span>
+
+<span class="sd">        Yields</span>
+<span class="sd">        ------</span>
+<span class="sd">        str</span>
+<span class="sd">            The absolute path of the temporary file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mktemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">suffix</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">,</span> <span class="n">dirname</span><span class="o">=</span><span class="n">dirname</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">filename</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">exc</span><span class="o">.</span><span class="n">ContainerFileNotFound</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;temporary file already destroyed: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Dockerblade  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Christopher Steven Timperley.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

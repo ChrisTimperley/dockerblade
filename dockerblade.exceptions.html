@@ -1,0 +1,301 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dockerblade.exceptions module &#8212; Dockerblade  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="dockerblade.files module" href="dockerblade.files.html" />
+    <link rel="prev" title="dockerblade.daemon module" href="dockerblade.daemon.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.files.html" title="dockerblade.files module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.daemon.html" title="dockerblade.daemon module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Dockerblade  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dockerblade.daemon.html"
+                        title="previous chapter">dockerblade.daemon module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dockerblade.files.html"
+                        title="next chapter">dockerblade.files module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dockerblade.exceptions.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-dockerblade.exceptions">
+<span id="dockerblade-exceptions-module"></span><h1>dockerblade.exceptions module<a class="headerlink" href="#module-dockerblade.exceptions" title="Permalink to this headline">¶</a></h1>
+<dl class="exception">
+<dt id="dockerblade.exceptions.CalledProcessError">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">CalledProcessError</code><span class="sig-paren">(</span><em class="sig-param">cmd</em>, <em class="sig-param">returncode</em>, <em class="sig-param">duration</em>, <em class="sig-param">output</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#CalledProcessError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.CalledProcessError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">subprocess.CalledProcessError</span></code></p>
+<p>Thrown when a process produces a non-zero return code.</p>
+<dl class="simple">
+<dt>cmd: str</dt><dd><p>The command that was used to launch the process.</p>
+</dd>
+<dt>returncode: int</dt><dd><p>The returncode that was produced by the process.</p>
+</dd>
+<dt>duration: float</dt><dd><p>The number of seconds that elapsed before the process terminated.</p>
+</dd>
+<dt>output: T, optional</dt><dd><p>The output, if any, that was produced by the process.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.CalledProcessError.cmd">
+<code class="sig-name descname">cmd</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.CalledProcessError.cmd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dockerblade.exceptions.CalledProcessError.duration">
+<code class="sig-name descname">duration</code><em class="property">: float</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.CalledProcessError.duration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dockerblade.exceptions.CalledProcessError.output">
+<code class="sig-name descname">output</code><em class="property">: _t.Optional[_t.Union[str, bytes]]</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.CalledProcessError.output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dockerblade.exceptions.CalledProcessError.returncode">
+<code class="sig-name descname">returncode</code><em class="property">: int</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.CalledProcessError.returncode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.ContainerFileAlreadyExists">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">ContainerFileAlreadyExists</code><span class="sig-paren">(</span><em class="sig-param">container_id</em>, <em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#ContainerFileAlreadyExists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.ContainerFileAlreadyExists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a></p>
+<p>A file already exists at a given path inside a container.</p>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.ContainerFileAlreadyExists.container_id">
+<code class="sig-name descname">container_id</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.ContainerFileAlreadyExists.container_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dockerblade.exceptions.ContainerFileAlreadyExists.path">
+<code class="sig-name descname">path</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.ContainerFileAlreadyExists.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.ContainerFileNotFound">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">ContainerFileNotFound</code><span class="sig-paren">(</span><em class="sig-param">container_id</em>, <em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#ContainerFileNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.ContainerFileNotFound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a></p>
+<p>No file was found at a given path in a container.</p>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.ContainerFileNotFound.container_id">
+<code class="sig-name descname">container_id</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.ContainerFileNotFound.container_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dockerblade.exceptions.ContainerFileNotFound.path">
+<code class="sig-name descname">path</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.ContainerFileNotFound.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.CopyFailed">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">CopyFailed</code><span class="sig-paren">(</span><em class="sig-param">reason</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#CopyFailed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.CopyFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a></p>
+<p>A copy operation failed unexpectedly.</p>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.CopyFailed.reason">
+<code class="sig-name descname">reason</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.CopyFailed.reason" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.DirectoryNotEmpty">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">DirectoryNotEmpty</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#DirectoryNotEmpty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.DirectoryNotEmpty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a></p>
+<p>A given directory is not empty.</p>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.DirectoryNotEmpty.path">
+<code class="sig-name descname">path</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.DirectoryNotEmpty.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.DockerBladeException">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">DockerBladeException</code><a class="reference internal" href="_modules/dockerblade/exceptions.html#DockerBladeException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.DockerBladeException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Used by all exceptions that are thrown by DockerBlade.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.EnvNotFoundError">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">EnvNotFoundError</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#EnvNotFoundError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.EnvNotFoundError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a></p>
+<p>No environment variable was found with the given name.</p>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.EnvNotFoundError.name">
+<code class="sig-name descname">name</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.EnvNotFoundError.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.HostFileNotFound">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">HostFileNotFound</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#HostFileNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.HostFileNotFound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a></p>
+<p>No file was found at a given path on the host machine.</p>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.HostFileNotFound.path">
+<code class="sig-name descname">path</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.HostFileNotFound.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.IsADirectoryError">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">IsADirectoryError</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#IsADirectoryError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.IsADirectoryError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a></p>
+<p>The given path is a directory but a file was expected.</p>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.IsADirectoryError.path">
+<code class="sig-name descname">path</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.IsADirectoryError.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.IsNotADirectoryError">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">IsNotADirectoryError</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#IsNotADirectoryError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.IsNotADirectoryError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a></p>
+<p>The given path is not a directory.</p>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.IsNotADirectoryError.path">
+<code class="sig-name descname">path</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.IsNotADirectoryError.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.TimeoutExpired">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">TimeoutExpired</code><span class="sig-paren">(</span><em class="sig-param">cmd</em>, <em class="sig-param">timeout</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#TimeoutExpired"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.TimeoutExpired" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">subprocess.TimeoutExpired</span></code></p>
+<p>Thrown when a timeout expires while waiting for a process.</p>
+<dl class="simple">
+<dt>cmd: str</dt><dd><p>The command that was used to launch the process.</p>
+</dd>
+<dt>timeout: float</dt><dd><p>The timeout in seconds.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.TimeoutExpired.cmd">
+<code class="sig-name descname">cmd</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.TimeoutExpired.cmd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dockerblade.exceptions.TimeoutExpired.timeout">
+<code class="sig-name descname">timeout</code><em class="property">: float</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.TimeoutExpired.timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dockerblade.exceptions.UnexpectedError">
+<em class="property">exception </em><code class="sig-prename descclassname">dockerblade.exceptions.</code><code class="sig-name descname">UnexpectedError</code><span class="sig-paren">(</span><em class="sig-param">description</em>, <em class="sig-param">error=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/exceptions.html#UnexpectedError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.exceptions.UnexpectedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dockerblade.exceptions.DockerBladeException" title="dockerblade.exceptions.DockerBladeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">dockerblade.exceptions.DockerBladeException</span></code></a></p>
+<p>An unexpected error occurred during an operation.</p>
+<dl class="attribute">
+<dt id="dockerblade.exceptions.UnexpectedError.description">
+<code class="sig-name descname">description</code><em class="property">: str</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.UnexpectedError.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dockerblade.exceptions.UnexpectedError.error">
+<code class="sig-name descname">error</code><em class="property">: _t.Optional['CalledProcessError']</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.exceptions.UnexpectedError.error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.files.html" title="dockerblade.files module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.daemon.html" title="dockerblade.daemon module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Dockerblade  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Christopher Steven Timperley.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,204 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dockerblade.daemon module &#8212; Dockerblade  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="dockerblade.exceptions module" href="dockerblade.exceptions.html" />
+    <link rel="prev" title="dockerblade.container module" href="dockerblade.container.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.exceptions.html" title="dockerblade.exceptions module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.container.html" title="dockerblade.container module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Dockerblade  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dockerblade.container.html"
+                        title="previous chapter">dockerblade.container module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dockerblade.exceptions.html"
+                        title="next chapter">dockerblade.exceptions module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dockerblade.daemon.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-dockerblade.daemon">
+<span id="dockerblade-daemon-module"></span><h1>dockerblade.daemon module<a class="headerlink" href="#module-dockerblade.daemon" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="dockerblade.daemon.DockerDaemon">
+<em class="property">class </em><code class="sig-prename descclassname">dockerblade.daemon.</code><code class="sig-name descname">DockerDaemon</code><span class="sig-paren">(</span><em class="sig-param">url=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/daemon.html#DockerDaemon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.daemon.DockerDaemon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Maintains a connection to a Docker daemon.</p>
+<dl class="attribute">
+<dt id="dockerblade.daemon.DockerDaemon.api">
+<code class="sig-name descname">api</code><em class="property">: docker.APIClient</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.daemon.DockerDaemon.api" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.daemon.DockerDaemon.attach">
+<code class="sig-name descname">attach</code><span class="sig-paren">(</span><em class="sig-param">id_or_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/daemon.html#DockerDaemon.attach"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.daemon.DockerDaemon.attach" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attaches to a running Docker with a given ID or name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="dockerblade.container.html#dockerblade.container.Container" title="dockerblade.container.Container"><code class="xref py py-class docutils literal notranslate"><span class="pre">Container</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dockerblade.daemon.DockerDaemon.client">
+<code class="sig-name descname">client</code><em class="property">: docker.DockerClient</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.daemon.DockerDaemon.client" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.daemon.DockerDaemon.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/daemon.html#DockerDaemon.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.daemon.DockerDaemon.close" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dockerblade.daemon.DockerDaemon.provision">
+<code class="sig-name descname">provision</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">command=None</em>, <em class="sig-param">*</em>, <em class="sig-param">entrypoint=None</em>, <em class="sig-param">environment=None</em>, <em class="sig-param">network_mode='bridge'</em>, <em class="sig-param">name=None</em>, <em class="sig-param">ports=None</em>, <em class="sig-param">user=None</em>, <em class="sig-param">volumes=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dockerblade/daemon.html#DockerDaemon.provision"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dockerblade.daemon.DockerDaemon.provision" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Docker container from a given image.</p>
+<dl class="simple">
+<dt>image: str</dt><dd><p>The name of the Docker image that should be used.</p>
+</dd>
+<dt>command: str</dt><dd><p>The command that should be run inside the container. If no
+command is given, the default command for the Docker image will
+be used instead.</p>
+</dd>
+<dt>name: str, optional</dt><dd><p>The name that should be given to the Docker container. If no name
+is given, Docker will automatically generate one instead.</p>
+</dd>
+<dt>user: str, optional</dt><dd><p>The user that should be used by the container. If none is given,
+the default user for that container image will be used.</p>
+</dd>
+<dt>entrypoint: str, optional</dt><dd><p>The entrypoint that should be used by the container. If none is
+given, the default entrypoint for the image will be used.</p>
+</dd>
+<dt>environment: Mapping[str, str], optional</dt><dd><p>An optional set of additional environment variables, indexed by
+name, that should be used by the system.</p>
+</dd>
+<dt>volumes: Mapping[str, str], optional</dt><dd><p>An optional set of volumes that should be mounted inside the
+container, specified as a dictionary where keys represent a host
+path or volume name, and values are a dictionary containing
+the following keys: <code class="code docutils literal notranslate"><span class="pre">bind</span></code>, the path to mount the volume
+inside the container, and <code class="code docutils literal notranslate"><span class="pre">mode</span></code>, specifies whether the
+mount should be read-write <code class="code docutils literal notranslate"><span class="pre">rw</span></code> or read-only <code class="code docutils literal notranslate"><span class="pre">ro</span></code>.</p>
+</dd>
+<dt>ports: Mapping[int, int], optional</dt><dd><p>An optional dictionary specifying port mappings between the host
+and container, where keys represent container ports and values
+represent host ports.</p>
+</dd>
+<dt>network_mode: str</dt><dd><p>Specifies the networking mode that should be used by the
+container. Can be either <code class="code docutils literal notranslate"><span class="pre">bridge</span></code>, :code`none`,
+<code class="code docutils literal notranslate"><span class="pre">container:&lt;name|id&gt;</span></code>, or <code class="code docutils literal notranslate"><span class="pre">host</span></code>.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Container</dt><dd><p>An interface to the newly launched container.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="dockerblade.container.html#dockerblade.container.Container" title="dockerblade.container.Container"><code class="xref py py-class docutils literal notranslate"><span class="pre">Container</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dockerblade.daemon.DockerDaemon.url">
+<code class="sig-name descname">url</code><em class="property">: Optional[str]</em><em class="property"> = None</em><a class="headerlink" href="#dockerblade.daemon.DockerDaemon.url" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.exceptions.html" title="dockerblade.exceptions module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dockerblade.container.html" title="dockerblade.container module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Dockerblade  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Christopher Steven Timperley.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>
