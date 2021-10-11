@@ -2,6 +2,7 @@ v0.5.7 (XXXX-XX-XX)
 -------------------
 
 * relaxed attrs requirement to any version since 19.2.0
+* added environment argument to Shell methods (#81)
 
 
 v0.5.6 (2020-11-23)

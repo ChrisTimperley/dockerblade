@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 __all__ = ('Shell', 'CompletedProcess', 'CalledProcessError')
 
-import typing
-from typing import Dict, Sequence, Optional, overload, List, Mapping, Union
+import typing as t
 from typing_extensions import Literal
 
 from loguru import logger
@@ -15,7 +14,7 @@ from .popen import Popen
 from .stopwatch import Stopwatch
 from .util import quote_container
 
-if typing.TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from .container import Container
 
 
@@ -37,7 +36,7 @@ class CompletedProcess:
     args: str
     returncode: int
     duration: float
-    output: Optional[Union[str, bytes]]
+    output: t.Optional[t.Union[str, bytes]]
 
     def check_returncode(self) -> None:
         """Raises a CalledProcessError if returncode is non-zero.
@@ -67,10 +66,10 @@ class Shell:
     path: str
         The absolute path to the binary (inside the container) that should be
         used to provide this shell.
-    _sources: Sequence[str]
+    _sources: t.Sequence[str]
         A sequence of files, given by their absolute paths, that should be
         sourced by the shell upon construction.
-    _environment: Mapping[str, str]
+    _environment: t.Mapping[str, str]
         A mapping from the names of environment variables to their values.
 
     Raises
@@ -80,8 +79,8 @@ class Shell:
     """
     container: 'Container' = attr.ib()
     path: str = attr.ib()
-    _sources: Sequence[str] = attr.ib(factory=tuple)
-    _environment: Mapping[str, str] = attr.ib(factory=dict)
+    _sources: t.Sequence[str] = attr.ib(factory=tuple)
+    _environment: t.Mapping[str, str] = attr.ib(factory=dict)
 
     def __attrs_post_init__(self) -> None:
         object.__setattr__(self, '_sources', tuple(self._sources))
@@ -100,7 +99,7 @@ class Shell:
             command = 'env'
 
         # store the state of the environment
-        env: Dict[str, str] = {}
+        env: t.Dict[str, str] = {}
         env_output = self.check_output(command, text=True)
         for env_line in env_output.replace('\r', '').split('\n'):
             name, separator, value = env_line.partition('=')
@@ -112,7 +111,7 @@ class Shell:
 
         object.__setattr__(self, '_environment', env)
 
-    def _local_to_host_pid(self, pid_local: int) -> Optional[int]:
+    def _local_to_host_pid(self, pid_local: int) -> t.Optional[int]:
         """Finds the host PID for a process inside this shell.
 
         Parameters
@@ -132,7 +131,7 @@ class Shell:
             [container._exec_id_to_host_pid(i) for i in info['ExecIDs']]
 
         # obtain a list of all processes inside this container
-        ctr_procs: List[psutil.Process] = []
+        ctr_procs: t.List[psutil.Process] = []
         for pid in ctr_pids:
             proc = psutil.Process(pid)
             ctr_procs.append(proc)
@@ -155,7 +154,7 @@ class Shell:
     def _instrument(self,
                     command: str,
                     *,
-                    time_limit: Optional[int] = None,
+                    time_limit: t.Optional[int] = None,
                     kill_after: int = 1
                     ) -> str:
         q = quote_container
@@ -186,13 +185,15 @@ class Shell:
         except KeyError as exc:
             raise EnvNotFoundError(var) from exc
 
-    def check_call(self,
-                   args: str,
-                   *,
-                   cwd: str = '/',
-                   time_limit: Optional[int] = None,
-                   kill_after: int = 1
-                   ) -> None:
+    def check_call(
+        self,
+        args: str,
+        *,
+        cwd: str = '/',
+        time_limit: t.Optional[int] = None,
+        kill_after: int = 1,
+        environment: t.Optional[t.Mapping[str, str]] = None,
+    ) -> None:
         """Executes a given commands, blocks until its completion, and checks
         that the return code is zero.
 
@@ -201,44 +202,55 @@ class Shell:
         CalledProcessError
             If the command produced a non-zero return code.
         """
-        self.run(args, stdout=False, cwd=cwd).check_returncode()
+        self.run(
+            args,
+            stdout=False,
+            cwd=cwd,
+            environment=environment,
+        ).check_returncode()
 
-    @overload
-    def check_output(self,
-                     args: str,
-                     *,
-                     stderr: bool = True,
-                     cwd: str = '/',
-                     encoding: str = 'utf-8',
-                     text: Literal[False],
-                     time_limit: Optional[int] = None,
-                     kill_after: int = 1
-                     ) -> bytes:
+    @t.overload
+    def check_output(
+        self,
+        args: str,
+        *,
+        stderr: bool = True,
+        cwd: str = '/',
+        encoding: str = 'utf-8',
+        text: Literal[False],
+        time_limit: t.Optional[int] = None,
+        kill_after: int = 1,
+        environment: t.Optional[t.Mapping[str, str]] = None,
+    ) -> bytes:
         ...
 
-    @overload
-    def check_output(self,
-                     args: str,
-                     *,
-                     stderr: bool = True,
-                     cwd: str = '/',
-                     encoding: str = 'utf-8',
-                     text: Literal[True],
-                     time_limit: Optional[int] = None,
-                     kill_after: int = 1
-                     ) -> str:
+    @t.overload
+    def check_output(
+        self,
+        args: str,
+        *,
+        stderr: bool = True,
+        cwd: str = '/',
+        encoding: str = 'utf-8',
+        text: Literal[True],
+        time_limit: t.Optional[int] = None,
+        kill_after: int = 1,
+        environment: t.Optional[t.Mapping[str, str]] = None,
+    ) -> str:
         ...
 
-    def check_output(self,
-                     args: str,
-                     *,
-                     stderr: bool = False,
-                     cwd: str = '/',
-                     encoding: str = 'utf-8',
-                     text: bool = True,
-                     time_limit: Optional[int] = None,
-                     kill_after: int = 1
-                     ) -> Union[str, bytes]:
+    def check_output(
+        self,
+        args: str,
+        *,
+        stderr: bool = False,
+        cwd: str = '/',
+        encoding: str = 'utf-8',
+        text: bool = True,
+        time_limit: t.Optional[int] = None,
+        kill_after: int = 1,
+        environment: t.Optional[t.Mapping[str, str]] = None,
+    ) -> t.Union[str, bytes]:
         """Executes a given commands, blocks until its completion, and checks
         that the return code is zero.
 
@@ -252,27 +264,32 @@ class Shell:
         CalledProcessError
             If the command produced a non-zero return code.
         """
-        result = self.run(args,
-                          encoding=encoding,
-                          text=text,
-                          stdout=True,
-                          stderr=stderr,
-                          cwd=cwd)
+        result = self.run(
+            args,
+            encoding=encoding,
+            text=text,
+            stdout=True,
+            stderr=stderr,
+            cwd=cwd,
+            environment=environment,
+        )
         result.check_returncode()
         assert result.output is not None
         return result.output
 
-    def run(self,
-            args: str,
-            *,
-            encoding: str = 'utf-8',
-            cwd: str = '/',
-            text: bool = True,
-            stdout: bool = True,
-            stderr: bool = False,
-            time_limit: Optional[int] = None,
-            kill_after: int = 1
-            ) -> CompletedProcess:
+    def run(
+        self,
+        args: str,
+        *,
+        encoding: str = 'utf-8',
+        cwd: str = '/',
+        text: bool = True,
+        stdout: bool = True,
+        stderr: bool = False,
+        time_limit: t.Optional[int] = None,
+        kill_after: int = 1,
+        environment: t.Optional[t.Mapping[str, str]] = None,
+    ) -> CompletedProcess:
         """Executes a given command and blocks until its completion.
 
         Parameters
@@ -301,6 +318,9 @@ class Shell:
             The maximum number of seconds to wait before sending SIGKILL to
             the process after attempting termination via SIGTERM. Only applies
             when :code:`time_limit` is specified.
+        environment: t.Mapping[str, str], optional
+            An optional set of environment variables that should be used during
+            execution.
 
         Returns
         -------
@@ -313,11 +333,14 @@ class Shell:
         args_instrumented = self._instrument(args,
                                              time_limit=time_limit,
                                              kill_after=kill_after)
+        if not environment:
+            environment = {}
+        environment = {**self._environment, **environment}
         with Stopwatch() as timer:
             retcode, output_bin = docker_container.exec_run(
                 args_instrumented,
                 detach=False,
-                environment=self._environment,
+                environment=environment,
                 tty=True,
                 stream=False,
                 socket=False,
@@ -327,7 +350,7 @@ class Shell:
 
         logger.debug(f"retcode: {retcode}")
 
-        output: Optional[Union[str, bytes]]
+        output: t.Optional[t.Union[str, bytes]]
         if no_output:
             output = None
         elif text:
@@ -342,23 +365,28 @@ class Shell:
         logger.debug(f"executed command: {result}")
         return result
 
-    def popen(self,
-              args: str,
-              *,
-              cwd: str = '/',
-              encoding: Optional[str] = 'utf-8',
-              stdout: bool = True,
-              stderr: bool = False,
-              time_limit: Optional[int] = None,
-              kill_after: int = 1
-              ) -> Popen:
+    def popen(
+        self,
+        args: str,
+        *,
+        cwd: str = '/',
+        encoding: t.Optional[str] = 'utf-8',
+        stdout: bool = True,
+        stderr: bool = False,
+        time_limit: t.Optional[int] = None,
+        kill_after: int = 1,
+        environment: t.Optional[t.Mapping[str, str]] = None,
+    ) -> Popen:
         docker_api = self.container.daemon.api
+        if not environment:
+            environment = {}
+        environment = {**self._environment, **environment}
         args_instrumented = self._instrument(args,
                                              time_limit=time_limit,
                                              kill_after=kill_after)
         exec_response = docker_api.exec_create(self.container.id,
                                                args_instrumented,
-                                               environment=self._environment,
+                                               environment=environment,
                                                tty=True,
                                                workdir=cwd,
                                                stdout=stdout,

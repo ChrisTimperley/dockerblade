@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 dockerblade = {path = ".", editable = true}
 mypy = "*"
+tox-pipenv = "*"
 
 [requires]
 python_version = "3.9"
