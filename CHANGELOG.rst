@@ -1,4 +1,4 @@
-v0.5.7 (XXXX-XX-XX)
+v0.5.7 (2021-10-12)
 -------------------
 
 * relaxed attrs requirement to any version since 19.2.0
