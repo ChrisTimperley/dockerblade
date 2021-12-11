@@ -11,7 +11,7 @@ def setup_server(server: xmlrpc.server.SimpleXMLRPCServer) -> None:
 
 def main() -> None:
     with xmlrpc.server.SimpleXMLRPCServer(
-        ("localhost", 26591),
+        ("0.0.0.0", 26591),
     ) as server:
         setup_server(server)
         server.serve_forever()
