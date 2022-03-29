@@ -272,6 +272,8 @@ class Shell:
             stderr=stderr,
             cwd=cwd,
             environment=environment,
+            time_limit=time_limit,
+            kill_after=kill_after,
         )
         result.check_returncode()
         assert result.output is not None

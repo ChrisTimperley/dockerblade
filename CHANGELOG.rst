@@ -1,3 +1,9 @@
+v0.5.8 (XXXX-XX-XX)
+-------------------
+
+* fixed a bug that prevented `time_limit` and `kill_after` from being used by subprocess.check_output
+
+
 v0.5.7 (2021-10-12)
 -------------------
 
