@@ -1,21 +1,13 @@
-.PHONY: docs check init test tox
+.PHONY: check install test lint
 
-# installs pipenv and builds the project
-init:
-	sudo pip install pipenv --upgrade
-	pipenv install -r requirements.dev.txt
-	pipenv install --dev
+lint:
+	poetry run ruff check src
+	poetry run mypy src
 
-# builds the documentation
-docs:
-	pipenv run python setup.py docs
-
-# runs the unit test suite
 test:
-	pipenv run pytest
+	poetry run pytest
 
-tox:
-	pipenv run tox
+install:
+	poetry install
 
-# runs a series of checks on the project via tox
-check: tox
+check: lint test

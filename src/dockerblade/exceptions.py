@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-import typing as _t
-import attr as _attr
 import subprocess as _subprocess
+import typing as _t
+
+import attr as _attr
 
 
 class DockerBladeException(Exception):
@@ -12,12 +12,12 @@ class DockerBladeException(Exception):
 class UnexpectedError(DockerBladeException):
     """An unexpected error occurred during an operation."""
     description: str
-    error: _t.Optional['CalledProcessError'] = _attr.ib(default=None)
+    error: _t.Optional["CalledProcessError"] = _attr.ib(default=None)
 
     def __str__(self) -> str:
         msg = f"An unexpected error occurred: {self.description}"
         if self.error:
-            msg += f' ({self.error})'
+            msg += f" ({self.error})"
         return msg
 
 
@@ -36,7 +36,7 @@ class CopyFailed(DockerBladeException):
     reason: str
 
     def __str__(self) -> str:
-        return f'Copy operation failed: {self.reason}'
+        return f"Copy operation failed: {self.reason}"
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
@@ -45,7 +45,7 @@ class IsADirectoryError(DockerBladeException):
     path: str
 
     def __str__(self) -> str:
-        return f'Directory exists at path where file is expected: {self.path}'
+        return f"Directory exists at path where file is expected: {self.path}"
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
@@ -54,7 +54,7 @@ class DirectoryNotEmpty(DockerBladeException):
     path: str
 
     def __str__(self) -> str:
-        return f'Directory is not empty: {self.path}'
+        return f"Directory is not empty: {self.path}"
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
@@ -63,7 +63,7 @@ class IsNotADirectoryError(DockerBladeException):
     path: str
 
     def __str__(self) -> str:
-        return f'Directory was expected at path: {self.path}'
+        return f"Directory was expected at path: {self.path}"
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
@@ -72,7 +72,7 @@ class HostFileNotFound(DockerBladeException):
     path: str
 
     def __str__(self) -> str:
-        return f'File not found [{self.path}] on host machine'
+        return f"File not found [{self.path}] on host machine"
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
@@ -82,8 +82,8 @@ class ContainerFileNotFound(DockerBladeException):
     path: str
 
     def __str__(self) -> str:
-        return (f'File not found [{self.path}] '
-                f'in container [{self.container_id}]')
+        return (f"File not found [{self.path}] "
+                f"in container [{self.container_id}]")
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
@@ -93,8 +93,8 @@ class ContainerFileAlreadyExists(DockerBladeException):
     path: str
 
     def __str__(self) -> str:
-        return (f'File already exists [{self.path}] '
-                f'in container [{self.container_id}]')
+        return (f"File already exists [{self.path}] "
+                f"in container [{self.container_id}]")
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)
@@ -115,7 +115,7 @@ class CalledProcessError(DockerBladeException, _subprocess.CalledProcessError):
     cmd: str
     returncode: int
     duration: float
-    output: _t.Optional[_t.Union[str, bytes]]
+    output: str | bytes | None
 
 
 @_attr.s(frozen=True, auto_exc=True, auto_attribs=True)

@@ -1,25 +1,29 @@
-# -*- coding: utf-8 -*-
-__all__ = ('FileSystem',)
+__all__ = ("FileSystem",)
 
-from typing import Iterator, Union, List, Optional, overload
-from typing_extensions import Literal
 import contextlib
-import typing
-import subprocess
 import os
+import subprocess
+import tempfile
+import typing
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Literal, overload
 
 import attr
-import tempfile
 from loguru import logger
 
 from . import exceptions as exc
 from .util import quote_container, quote_host
 
 if typing.TYPE_CHECKING:
-    from .shell import Shell
     from .container import Container
+    from .shell import Shell
 
-_ON_WINDOWS = os.name == 'nt'
+_ON_WINDOWS = os.name == "nt"
+
+EXIT_CODE_FILE_NOT_FOUND = 50
+EXIT_CODE_IS_NOT_A_DIRECTORY = 51
+EXIT_CODE_FILE_ALREADY_EXISTS = 49
 
 
 @attr.s(slots=True)
@@ -31,18 +35,17 @@ class FileSystem:
     container: Container
         The container to which this filesystem belongs.
     """
-    container: 'Container' = attr.ib()
-    _shell: 'Shell' = attr.ib(repr=False, eq=False, hash=False)
+    container: "Container" = attr.ib()
+    _shell: "Shell" = attr.ib(repr=False, eq=False, hash=False)
 
     def copy_from_host(self, path_host: str, path_container: str) -> None:
-        """
-        Copies a given file or directory tree from the host to the container.
+        """Copies a given file or directory tree from the host to the container.
 
         Parameters
         ----------
-        fn_host: str
+        path_host: str
             the file or directory tree that should be copied from the host.
-        fn_container: str
+        path_container: str
             the destination path on the container.
 
         Raises
@@ -72,23 +75,24 @@ class FileSystem:
                     f"{id_container}:{path_container_escaped}")
         try:
             subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as error:
             path_container_parent: str = os.path.dirname(path_container)
             if not self.isdir(path_container_parent):
-                raise exc.ContainerFileNotFound(path=path_container_parent,
-                                                container_id=id_container)
+                raise exc.ContainerFileNotFound(
+                    path=path_container_parent,
+                    container_id=id_container,
+                ) from error
 
             reason = (f"failed to copy file [{path_host}] "
                       f"from host to container [{id_container}]: "
                       f"{path_container}")
-            raise exc.CopyFailed(reason)
+            raise exc.CopyFailed(reason) from error
 
     def copy_to_host(self,
                      path_container: str,
-                     path_host: str
+                     path_host: str,
                      ) -> None:
-        """
-        Copies a given file or directory tree from the container to the host.
+        """Copies a given file or directory tree from the container to the host.
 
         Parameters
         ----------
@@ -126,25 +130,28 @@ class FileSystem:
                     f"{path_host_escaped}")
         try:
             subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as error:
             if not self.exists(path_container):
-                raise exc.ContainerFileNotFound(path=path_container,
-                                                container_id=id_container)
+                raise exc.ContainerFileNotFound(
+                    path=path_container,
+                    container_id=id_container,
+                ) from error
 
             reason = (f"failed to copy file [{path_container}] "
                       f"from container [{id_container}] to host: "
                       f"{path_host}")
-            raise exc.CopyFailed(reason)
+            raise exc.CopyFailed(reason) from error
 
     def remove(self, filename: str) -> None:
         """Removes a given file.
+
         Inspired by :meth:`os.remove`.
 
-        Warning
+        Warning:
         -------
         Does not handle permissions errors.
 
-        Raises
+        Raises:
         ------
         ContainerFileNotFound
             if the given file does not exist.
@@ -153,27 +160,37 @@ class FileSystem:
         UnexpectedError
             if an unexpected failure occurs.
         """
-        command = f'rm {quote_container(filename)}'
+        command = f"rm {quote_container(filename)}"
         try:
             self._shell.check_call(command)
         except exc.CalledProcessError as error:
             if not self.exists(filename):
-                raise exc.ContainerFileNotFound(path=filename,
-                                                container_id=self.container.id)
-            elif self.isdir(filename):
-                raise exc.IsADirectoryError(path=filename)
+                raise exc.ContainerFileNotFound(
+                    path=filename,
+                    container_id=self.container.id,
+                ) from error
 
-            raise exc.UnexpectedError('failed to remove', error) from error
+            if self.isdir(filename):
+                raise exc.IsADirectoryError(
+                    path=filename,
+                ) from error
+
+            error_message = "failed to remove file"
+            raise exc.UnexpectedError(
+                error_message,
+                error,
+            ) from error
 
     def rmdir(self, directory: str) -> None:
         """Removes a given directory.
+
         Inspired by :meth:`os.rmdir`.
 
-        Warning
+        Warning:
         -------
         Does not handle permissions errors.
 
-        Raises
+        Raises:
         ------
         ContainerFileNotFound
             if the given directory does not exist.
@@ -185,22 +202,28 @@ class FileSystem:
             an unexpected failure occurred.
         """
         escaped_directory = quote_container(directory)
-        command = (f'test -e {escaped_directory} || exit 50 && '
-                   f'test -d {escaped_directory} || exit 51 && '
-                   f'rmdir {escaped_directory}')
+        command = (f"test -e {escaped_directory} || exit 50 && "
+                   f"test -d {escaped_directory} || exit 51 && "
+                   f"rmdir {escaped_directory}")
         try:
             self._shell.check_output(command, text=True)
         except exc.CalledProcessError as error:
-            if error.returncode == 50:
-                raise exc.ContainerFileNotFound(path=directory,
-                                                container_id=self.container.id)
-            if error.returncode == 51:
-                raise exc.IsNotADirectoryError(path=directory)
-            if error.output and 'Directory not empty' in error.output:
-                raise exc.DirectoryNotEmpty(path=directory) from error
+            if error.returncode == EXIT_CODE_FILE_NOT_FOUND:
+                raise exc.ContainerFileNotFound(
+                    path=directory,
+                    container_id=self.container.id,
+                ) from error
+            if error.returncode == EXIT_CODE_IS_NOT_A_DIRECTORY:
+                raise exc.IsNotADirectoryError(
+                    path=directory,
+                ) from error
+            if error.output and "Directory not empty" in error.output:
+                raise exc.DirectoryNotEmpty(
+                    path=directory,
+                ) from error
             raise exc.UnexpectedError('failed to remove directory', error) from error  # noqa
 
-    def write(self, filename: str, contents: Union[str, bytes]) -> None:
+    def write(self, filename: str, contents: str | bytes) -> None:
         """Writes to a given file.
 
         Parameters
@@ -210,7 +233,7 @@ class FileSystem:
         contents: Union[str, bytes]
             the text or binary contents of the file.
         """
-        mode = 'wb' if isinstance(contents, bytes) else 'w'
+        mode = "wb" if isinstance(contents, bytes) else "w"
         directory = os.path.dirname(filename)
         if not self.isdir(directory):
             raise exc.ContainerFileNotFound(path=directory,
@@ -218,7 +241,7 @@ class FileSystem:
 
         # write to a temporary file on the host and copy to container
         with tempfile.TemporaryDirectory() as host_temp_dir:
-            temp_filename = os.path.join(host_temp_dir, 'contents')
+            temp_filename = os.path.join(host_temp_dir, "contents")
             with open(temp_filename, mode) as fh:
                 fh.write(contents)
             self.copy_from_host(temp_filename, filename)
@@ -235,7 +258,7 @@ class FileSystem:
     def read(self, filename: str, binary: Literal[False]) -> str:
         ...
 
-    def read(self, filename: str, binary: bool = False) -> Union[str, bytes]:
+    def read(self, filename: str, binary: bool = False) -> str | bytes:
         """Reads the contents of a given file.
 
         Parameters
@@ -253,20 +276,19 @@ class FileSystem:
         IsADirectoryError
             If :code:`filename` is a directory.
         """
-        mode = 'rb' if binary else 'r'
+        mode = "rb" if binary else "r"
         if self.isdir(filename):
             raise exc.IsADirectoryError(filename)
 
         with tempfile.TemporaryDirectory() as host_temp_dir:
-            filename_host_temp = os.path.join(host_temp_dir, 'contents')
+            filename_host_temp = os.path.join(host_temp_dir, "contents")
             self.copy_to_host(filename, filename_host_temp)
             with open(filename_host_temp, mode) as f:
-                return f.read()
+                content: str | bytes = f.read()
+                return content
 
-    def find(self, path: str, filename: str) -> List[str]:
-        """
-        Returns a list of files that match a provided filename in a given
-        directory, recursively.
+    def find(self, path: str, filename: str) -> list[str]:
+        """Returns a list of files that match a filename in a directory, recursively.
 
         Parameters
         ----------
@@ -291,26 +313,36 @@ class FileSystem:
         """
         # TODO execute as root
         path_escaped = quote_container(path)
-        command = (f'test ! -e {path_escaped} && exit 50 || '
-                   f'test ! -d {path_escaped} && exit 51 || '
-                   f'find {path_escaped} -name {quote_container(filename)}')
+        command = (
+            f"test ! -e {path_escaped} && exit {EXIT_CODE_FILE_NOT_FOUND} || "
+            f"test ! -d {path_escaped} && exit {EXIT_CODE_IS_NOT_A_DIRECTORY} || "
+            f"find {path_escaped} -name {quote_container(filename)}"
+        )
         try:
             output = self._shell.check_output(command, text=True)
         except exc.CalledProcessError as error:
-            if error.returncode == 50:
-                raise exc.ContainerFileNotFound(path=path,
-                                                container_id=self.container.id) from error  # noqa
-            if error.returncode == 51:
-                raise exc.IsNotADirectoryError(path=path) from error
-            raise exc.UnexpectedError('find failed', error=error) from error
+            if error.returncode == EXIT_CODE_FILE_NOT_FOUND:
+                raise exc.ContainerFileNotFound(
+                    path=path,
+                    container_id=self.container.id,
+                ) from error
+            if error.returncode == EXIT_CODE_IS_NOT_A_DIRECTORY:
+                raise exc.IsNotADirectoryError(
+                    path=path,
+                ) from error
 
-        paths: List[str] = output.replace('\r', '').split('\n')
+            error_message = "find failed"
+            raise exc.UnexpectedError(
+                error_message,
+                error=error,
+            ) from error
+
+        paths: list[str] = output.replace("\r", "").split("\n")
         return paths
 
-    def makedirs(self, d: str, exist_ok: bool = False) -> None:
-        """
-        Recursively creates a directory at a given path, creating any missing
-        intermediate directories along the way.
+    def makedirs(self, d: str, *, exist_ok: bool = False) -> None:
+        """Recursively creates a directory at a given path, creating any missing intermediate directories along the way.
+
         Inspired by :meth:`os.makedirs`.
 
         Parameters
@@ -332,25 +364,27 @@ class FileSystem:
         d_parent = os.path.dirname(d)
         if self.isdir(d) and not exist_ok:
             raise exc.ContainerFileAlreadyExists(path=d,
-                                                 container_id=self.container.id)  # noqa
+                                                 container_id=self.container.id)
         if self.isfile(d):
             raise exc.ContainerFileAlreadyExists(path=d,
-                                                 container_id=self.container.id)  # noqa
+                                                 container_id=self.container.id)
         if self.exists(d_parent) and self.isfile(d_parent):
             raise exc.IsNotADirectoryError(d_parent)
 
-        command = f'mkdir -p {quote_container(d)}'
+        command = f"mkdir -p {quote_container(d)}"
         self._shell.check_call(command)
 
     def exists(self, path: str) -> bool:
         """Determines whether a file or directory exists at the given path.
+
         Inspired by :meth:`os.path.exists`.
         """
-        cmd = f'test -e {quote_container(path)}'
+        cmd = f"test -e {quote_container(path)}"
         return self._shell.run(cmd, stdout=False).returncode == 0
 
     def mkdir(self, directory: str) -> None:
         """Creates a directory at a given path.
+
         Inspired by :meth:`os.mkdir`.
 
         Raises
@@ -367,32 +401,40 @@ class FileSystem:
         directory_escaped = quote_container(directory)
         directory_parent = os.path.dirname(directory)
         directory_parent_escaped = quote_container(directory_parent)
-        command = (f"test -e {directory_escaped} && exit 50 || "
-                   f"test ! -e {directory_parent_escaped} && exit 51 || "
-                   f"test ! -d {directory_parent_escaped} && exit 52 || "
-                   f"mkdir {directory_escaped}")
+        command = (
+            f"test -e {directory_escaped} && exit {EXIT_CODE_FILE_ALREADY_EXISTS} || "
+            f"test ! -e {directory_parent_escaped} && exit {EXIT_CODE_FILE_NOT_FOUND} || "
+            f"test ! -d {directory_parent_escaped} && exit {EXIT_CODE_IS_NOT_A_DIRECTORY} || "
+            f"mkdir {directory_escaped}"
+        )
 
         try:
             self._shell.check_call(command)
         except exc.CalledProcessError as error:
-            if error.returncode == 50:
+            if error.returncode == EXIT_CODE_FILE_ALREADY_EXISTS:
                 raise exc.ContainerFileAlreadyExists(
                     path=directory,
                     container_id=self.container.id) from error
-            if error.returncode == 51:
+            if error.returncode == EXIT_CODE_FILE_NOT_FOUND:
                 raise exc.ContainerFileNotFound(
                     path=directory_parent,
                     container_id=self.container.id) from error
-            if error.returncode == 52:
+            if error.returncode == EXIT_CODE_IS_NOT_A_DIRECTORY:
                 raise exc.IsNotADirectoryError(directory_parent) from error
-            raise exc.UnexpectedError('mkdir failed', error) from error
+
+            error_message = "mkdir failed"
+            raise exc.UnexpectedError(
+                error_message,
+                error,
+            ) from error
 
     def listdir(self,
                 directory: str,
                 *,
-                absolute: bool = False
-                ) -> List[str]:
+                absolute: bool = False,
+                ) -> list[str]:
         """Returns a list of the files belonging to a given directory.
+
         Inspired by :meth:`os.listdir`.
 
         Parameters
@@ -413,48 +455,56 @@ class FileSystem:
             if an unexpected error occurred during execution of this command
         """
         directory_escaped = quote_container(directory)
-        command = (f'test -e {directory_escaped} || exit 50 && '
-                   f'test -d {directory_escaped} || exit 51 && '
-                   f'ls --color=never -A -1 {directory_escaped}')
+        command = (
+            f"test -e {directory_escaped} || exit {EXIT_CODE_FILE_NOT_FOUND} && "
+            f"test -d {directory_escaped} || exit {EXIT_CODE_IS_NOT_A_DIRECTORY} && "
+            f"ls --color=never -A -1 {directory_escaped}"
+        )
         try:
             output = self._shell.check_output(command, text=True)
         except exc.CalledProcessError as error:
-            if error.returncode == 50:
-                raise exc.ContainerFileNotFound(path=directory,
-                                                container_id=self.container.id)  # noqa
-            if error.returncode == 51:
-                raise exc.IsNotADirectoryError(path=directory)
+            if error.returncode == EXIT_CODE_FILE_NOT_FOUND:
+                raise exc.ContainerFileNotFound(
+                    path=directory,
+                    container_id=self.container.id,
+                ) from error
+            if error.returncode == EXIT_CODE_IS_NOT_A_DIRECTORY:
+                raise exc.IsNotADirectoryError(
+                    path=directory,
+                ) from error
             raise
 
-        paths: List[str] = output.replace('\r', '').split('\n')
+        paths: list[str] = output.replace("\r", "").split("\n")
         if absolute:
-            paths = [os.path.join(directory, p) for p in paths]
+            paths = [os.path.join(directory, path) for path in paths]
         return paths
 
     def isfile(self, path: str) -> bool:
         """Determines whether a regular file exists at a given path.
+
         Inspired by :meth:`os.path.isfile`.
         """
-        cmd = f'test -f {quote_container(path)}'
+        cmd = f"test -f {quote_container(path)}"
         return self._shell.run(cmd, stdout=False).returncode == 0
 
     def isdir(self, path: str) -> bool:
         """Determines whether a directory exists at a given path.
+
         Inspired by :meth:`os.path.dir`.
         """
-        cmd = f'test -d {quote_container(path)}'
+        cmd = f"test -d {quote_container(path)}"
         return self._shell.run(cmd, stdout=False).returncode == 0
 
     def islink(self, path: str) -> bool:
         """Determines whether a symbolic link exists at a given path.
+
         Inspired by :meth:`os.path.islink`.
         """
-        cmd = f'test -h {quote_container(path)}'
+        cmd = f"test -h {quote_container(path)}"
         return self._shell.run(cmd, stdout=False).returncode == 0
 
     def access(self, path: str, mode: int) -> bool:
-        """Determines whether the user for the shell has access to perform a
-        given operation (e.g., existence, read, write, execute) at a path.
+        """Determines whether the shell user can perform an operation (e.g., existence, read, write, execute).
 
         Parameters
         ----------
@@ -479,21 +529,20 @@ class FileSystem:
         if mode == os.F_OK:
             return self.exists(path)
 
-        commands: List[str] = []
+        commands: list[str] = []
         if mode & os.X_OK > 0:
-            commands.append(f'test -x {escaped_path}')
+            commands.append(f"test -x {escaped_path}")
         if mode & os.R_OK > 0:
-            commands.append(f'test -r {escaped_path}')
+            commands.append(f"test -r {escaped_path}")
         if mode & os.W_OK > 0:
-            commands.append(f'test -w {escaped_path}')
+            commands.append(f"test -w {escaped_path}")
 
         if not any(commands):
             return False
 
-        command = ' && '.join(commands)
+        command = " && ".join(commands)
         outcome = self._shell.run(command, stdout=False, stderr=False)
-        has_access = outcome.returncode == 0
-        return has_access
+        return outcome.returncode == 0
 
     def patch(self, context: str, diff: str) -> None:
         """Attempts to atomically apply a given patch to the filesystem.
@@ -519,30 +568,33 @@ class FileSystem:
         ContainerFileNotFoundError
             If the given context is neither a file or directory.
         """
-        if not os.path.isabs(context):
-            raise ValueError("context must be supplied as an absolute path")
+        context_path = Path(context)
+        if not context_path.is_absolute():
+            error = f"context must be supplied as an absolute path: {context}"
+            raise ValueError(error)
 
-        with self.tempfile(suffix='.diff') as fn_diff:
+        with self.tempfile(suffix=".diff") as fn_diff:
             self.write(fn_diff, diff)
 
             safe_context = quote_container(context)
             safe_fn_diff = quote_container(fn_diff)
             if self.isdir(context):
-                cmd = f'patch -u -p0 -f -i {safe_fn_diff} -d {safe_context}'
+                cmd = f"patch -u -p0 -f -i {safe_fn_diff} -d {safe_context}"
             elif self.isfile(context):
-                cmd = f'patch -u -f -i {safe_fn_diff} {safe_context}'
+                cmd = f"patch -u -f -i {safe_fn_diff} {safe_context}"
             else:
                 raise exc.ContainerFileNotFound(path=context,
-                                                container_id=self.container.id)  # noqa
+                                                container_id=self.container.id)
 
             self._shell.check_call(cmd)
 
     def mktemp(self,
-               suffix: Optional[str] = None,
-               prefix: Optional[str] = None,
-               dirname: Optional[str] = None
+               suffix: str | None = None,
+               prefix: str | None = None,
+               dirname: str | None = None,
                ) -> str:
         """Creates a temporary file.
+
         Inspired by :class:`tempfile.mktemp`.
 
         Parameters
@@ -566,38 +618,38 @@ class FileSystem:
             The absolute path of the temporary file.
         """
         template = quote_container(f"{prefix if prefix else 'tmp'}.XXXXXXXXXX")
-        dirname = dirname if dirname else '/tmp'
-        cmd_parts = ('mktemp', template, '-p', quote_container(dirname))
+        dirname = dirname if dirname else "/tmp"
+        cmd_parts = ("mktemp", template, "-p", quote_container(dirname))
         if not self.isdir(dirname):
             raise exc.ContainerFileNotFound(path=dirname,
                                             container_id=self.container.id)
-        command = ' '.join(cmd_parts)
+        command = " ".join(cmd_parts)
         filename = self._shell.check_output(command, text=True)
 
         if suffix:
             original_filename = filename
             filename = original_filename + suffix
-            command = f'mv {original_filename} {filename}'
+            command = f"mv {original_filename} {filename}"
             self._shell.check_call(command)
 
         return filename
 
     @contextlib.contextmanager
     def tempfile(self,
-                 suffix: Optional[str] = None,
-                 prefix: Optional[str] = None,
-                 dirname: Optional[str] = None
+                 suffix: str | None = None,
+                 prefix: str | None = None,
+                 dirname: str | None = None,
                  ) -> Iterator[str]:
         """Creates a temporary file within a context.
 
         Upon exiting the context, the temporary file will be destroyed.
         Inspired by :class:`tempfile.TemporaryFile`.
 
-        Note
+        Note:
         ----
         Accepts the same arguments as :meth:`mktemp`.
 
-        Yields
+        Yields:
         ------
         str
             The absolute path of the temporary file.
@@ -607,4 +659,4 @@ class FileSystem:
         try:
             self.remove(filename)
         except exc.ContainerFileNotFound:
-            logger.debug('temporary file already destroyed: %s', filename)
+            logger.debug("temporary file already destroyed: %s", filename)

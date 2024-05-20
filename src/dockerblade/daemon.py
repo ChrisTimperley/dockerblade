@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
-__all__ = ('DockerDaemon',)
+__all__ = ("DockerDaemon",)
 
+from collections.abc import Mapping
 from types import TracebackType
-from typing import Any, Mapping, Optional, Type
+from typing import Any
 
-from loguru import logger
 import attr
 import docker
+from loguru import logger
 
 from .container import Container
 
@@ -14,7 +14,7 @@ from .container import Container
 @attr.s(frozen=True)
 class DockerDaemon:
     """Maintains a connection to a Docker daemon."""
-    url: Optional[str] = attr.ib(default=None)
+    url: str | None = attr.ib(default=None)
     client: docker.DockerClient = \
         attr.ib(init=False, eq=False, hash=False, repr=False)
     api: docker.APIClient = \
@@ -23,17 +23,17 @@ class DockerDaemon:
     def __attrs_post_init__(self) -> None:
         client = docker.DockerClient(self.url)
         api = client.api
-        object.__setattr__(self, 'client', client)
-        object.__setattr__(self, 'api', api)
+        object.__setattr__(self, "client", client)
+        object.__setattr__(self, "api", api)
         logger.debug(f"created daemon connection: {self}")
 
-    def __enter__(self) -> 'DockerDaemon':
+    def __enter__(self) -> "DockerDaemon":
         return self
 
     def __exit__(self,
-                 ex_type: Optional[Type[BaseException]],
-                 ex_val: Optional[BaseException],
-                 ex_tb: Optional[TracebackType]
+                 ex_type: type[BaseException] | None,
+                 ex_val: BaseException | None,
+                 ex_tb: TracebackType | None,
                  ) -> None:
         self.close()
 
@@ -53,19 +53,19 @@ class DockerDaemon:
 
     def provision(self,
                   image: str,
-                  command: Optional[str] = None,
+                  command: str | None = None,
                   *,
-                  entrypoint: Optional[str] = None,
-                  environment: Optional[Mapping[str, str]] = None,
-                  network_mode: str = 'bridge',
-                  name: Optional[str] = None,
-                  ports: Optional[Mapping[int, int]] = None,
-                  user: Optional[str] = None,
-                  volumes: Optional[Mapping[str, Any]] = None,
+                  entrypoint: str | None = None,
+                  environment: Mapping[str, str] | None = None,
+                  network_mode: str = "bridge",
+                  name: str | None = None,
+                  ports: Mapping[int, int] | None = None,
+                  user: str | None = None,
+                  volumes: Mapping[str, Any] | None = None,
                   ) -> Container:
         """Creates a Docker container from a given image.
 
-        Arguments
+        Arguments:
         ---------
         image: str
             The name of the Docker image that should be used.
@@ -101,7 +101,7 @@ class DockerDaemon:
             container. Can be either :code:`bridge`, :code`none`,
             :code:`container:<name|id>`, or :code:`host`.
 
-        Returns
+        Returns:
         -------
         Container
             An interface to the newly launched container.

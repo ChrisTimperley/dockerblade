@@ -1,6 +1,8 @@
-v0.5.8 (XXXX-XX-XX)
+v0.6.0 (2024-05-20)
 -------------------
 
+* switched from Pipenv to Poetry
+* updated linting config to use Ruff and MyPy 1.1.0
 * fixed a bug that prevented `time_limit` and `kill_after` from being used by subprocess.check_output
 
 

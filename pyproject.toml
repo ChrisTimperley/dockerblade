@@ -1,0 +1,103 @@
+[tool.poetry]
+name = "dockerblade"
+version = "0.6.0"
+description = "Interact with Docker containers via Python-like APIs"
+authors = ["Chris Timperley <ctimperley@cmu.edu>"]
+license = "Apache-2.0"
+repository = "https://github.com/ChrisTimperley/dockerblade"
+readme = "README.rst"
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4"
+loguru = ">=0.5"
+attrs = ">=19.2.0"
+docker = "^7.0"
+psutil = "^5.7"
+requests = "2.31.0"
+mslex = "^1.2"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+mypy = ">=1.10.0"
+pytest = "^7.4.3"
+ruff = ">=0.4.4"
+types-psutil = "^5.9.5.20240516"
+types-docker = "^7.0.0.20240519"
+
+[tool.mypy]
+ignore_missing_imports = false
+strict = true
+untyped_calls_exclude = [
+    "docker"
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src"]
+
+[tool.ruff.lint]
+select = [
+    "ALL",  # includes all rules (including new ones)
+]
+per-file-ignores = {"*/__init__.py" = ["F401"]}
+extend-ignore = [
+    "ANN101",   # missing type annotation for 'self' in method
+    "ANN102",   # missing type annotation for 'cls' in classmethod
+    "B024",     # use of abstract base class without abstract methods
+    "D100",     # missing docstring in public module
+    "D101",     # missing docstring in public class
+    "D102",     # missing docstring in public method
+    "D103",     # missing docstring in public function
+    "D104",     # missing docstring in public package
+    "D105",     # missing docstring in magic method
+    "D203",     # one-blank-line-before-class
+    "D213",     # multi-line-summary-second-line
+    "D401",     # first line of docstring should be in imperative mood
+    "D413",     # missing blank line after last section
+    "FIX001",   # unresolved FIXME
+    "FIX002",   # TODO found
+    "TD001",    # invalid TODO tag: `FIXME`
+    "TD002",    # missing author in TODO
+    "TD003",    # missing issue link on line following TODO
+    "TD004",    # missing colon in TODO
+    "TRY003",   # avoid specifying long messages outside the exception class
+    "S101",     # use of assertions
+    "SLF001",   # private member accessed
+    "T201",     # use of print
+    "D204",     # 1 blank line required after class docstring
+    "C901",     # function is too complex (cyclomatic complexity)
+    "PLR0912",  # too many branches
+    "PGH003",   # use specific rule codes when ignoring type issues
+    "FBT001",   # boolean typed positional argument in function definition
+    "ARG001",   # unused function argument
+    "PLR0913",  # too many arguments in function definition
+    "PLR0911",  # too many return statements
+    "SIM108",   # use ternary operator
+    "N818",     # exception names should include an "Error" suffix
+    "PGH004",   # use specific codes when using noqa
+    "S108",     # probable insecure usage of temporary file or directory
+    "S602",     # security risk: use of shell=True
+    "PTH118",   # `os.path.join()` should be replaced by `Path` with `/` operator
+    "PTH123",   # `open()` should be replaced by `Path.open()`
+    "PTH120",   # `os.path.dirname()` should be replaced by `Path.parent`
+    "PTH112",   # `os.path.isdir()` should be replaced by `Path.is_dir()`
+    "PTH110",   # `os.path.exists()` should be replaced by `Path.exists()`
+    "FBT002",   # boolean default positional argument in function definition
+    "A001",     # variable X is shadowing a Python builtin
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

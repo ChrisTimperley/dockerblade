@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-__all__ = ('Stopwatch',)
+__all__ = ("Stopwatch",)
 
+import warnings
 from timeit import default_timer as timer
 from types import TracebackType
-from typing import Optional, Type
-import warnings
 
 import attr
 
@@ -24,23 +22,23 @@ class Stopwatch:
     _paused: bool = attr.ib(default=True)
     _time_start: float = attr.ib(default=0.0)
 
-    def __enter__(self) -> 'Stopwatch':
+    def __enter__(self) -> "Stopwatch":
         self.start()
         return self
 
     def __exit__(self,
-                 ex_type: Optional[Type[BaseException]],
-                 ex_val: Optional[BaseException],
-                 ex_tb: Optional[TracebackType]
+                 ex_type: type[BaseException] | None,
+                 ex_val: BaseException | None,
+                 ex_tb: TracebackType | None,
                  ) -> None:
         self.stop()
 
     def __repr__(self) -> str:
-        return f'Stopwatch(paused={self._paused}, duration={self.duration})'
+        return f"Stopwatch(paused={self._paused}, duration={self.duration})"
 
     def __str__(self) -> str:
         status = "PAUSED" if self._paused else "RUNNING"
-        return f'[{status}] {self.duration:.3f} s'
+        return f"[{status}] {self.duration:.3f} s"
 
     def stop(self) -> None:
         """Freezes the stopwatch."""
@@ -54,7 +52,10 @@ class Stopwatch:
             self._time_start = timer()
             self._paused = False
         else:
-            warnings.warn("timer is already running")
+            warnings.warn(
+                "timer is already running",
+                stacklevel=2,
+            )
 
     @property
     def paused(self) -> bool:

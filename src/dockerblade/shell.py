@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
-__all__ = ('Shell', 'CompletedProcess', 'CalledProcessError')
+__all__ = ("Shell", "CompletedProcess", "CalledProcessError")
 
 import typing as t
-from typing_extensions import Literal
+from pathlib import Path
+from typing import Literal
 
-from loguru import logger
 import attr
 import psutil
+from loguru import logger
 
-from .exceptions import (CalledProcessError, EnvNotFoundError,
-                         ContainerFileNotFound)
+from .exceptions import CalledProcessError, ContainerFileNotFound, EnvNotFoundError
 from .popen import Popen
 from .stopwatch import Stopwatch
 from .util import quote_container
@@ -36,7 +35,7 @@ class CompletedProcess:
     args: str
     returncode: int
     duration: float
-    output: t.Optional[t.Union[str, bytes]]
+    output: str | bytes | None
 
     def check_returncode(self) -> None:
         """Raises a CalledProcessError if returncode is non-zero.
@@ -56,6 +55,7 @@ class CompletedProcess:
 @attr.s(eq=False, hash=False, slots=True)
 class Shell:
     """Provides shell access to a Docker container.
+
     Do not directly call the constructor to create shells. Instead, use the
     :method:`shell` method of :class:`Container` to build a shell.
 
@@ -77,14 +77,14 @@ class Shell:
     ContainerFileNotFound
         If a given source file is not found.
     """
-    container: 'Container' = attr.ib()
+    container: "Container" = attr.ib()
     path: str = attr.ib()
     _sources: t.Sequence[str] = attr.ib(factory=tuple)
     _environment: t.Mapping[str, str] = attr.ib(factory=dict)
 
     def __attrs_post_init__(self) -> None:
-        object.__setattr__(self, '_sources', tuple(self._sources))
-        object.__setattr__(self, '_environment', dict(self._environment))
+        object.__setattr__(self, "_sources", tuple(self._sources))
+        object.__setattr__(self, "_environment", dict(self._environment))
 
         if self._sources:
             filesystem = self.container.filesystem()
@@ -94,24 +94,24 @@ class Shell:
                                                 path=src)
 
             command = ' && '.join([f'. {src} > /dev/null 2> /dev/null' for src in self._sources])  # noqa
-            command += ' && env'
+            command += " && env"
         else:
-            command = 'env'
+            command = "env"
 
         # store the state of the environment
-        env: t.Dict[str, str] = {}
+        env: dict[str, str] = {}
         env_output = self.check_output(command, text=True)
-        for env_line in env_output.replace('\r', '').split('\n'):
-            name, separator, value = env_line.partition('=')
+        for env_line in env_output.replace("\r", "").split("\n"):
+            name, separator, value = env_line.partition("=")
             env[name] = value
 
         # ignore the PWD variable
-        if 'PWD' in env:
-            del env['PWD']
+        if "PWD" in env:
+            del env["PWD"]
 
-        object.__setattr__(self, '_environment', env)
+        object.__setattr__(self, "_environment", env)
 
-    def _local_to_host_pid(self, pid_local: int) -> t.Optional[int]:
+    def _local_to_host_pid(self, pid_local: int) -> int | None:
         """Finds the host PID for a process inside this shell.
 
         Parameters
@@ -128,10 +128,10 @@ class Shell:
         ctr_pids = [container.pid]
         info = container._info
         ctr_pids += \
-            [container._exec_id_to_host_pid(i) for i in info['ExecIDs']]
+            [container._exec_id_to_host_pid(i) for i in info["ExecIDs"]]
 
         # obtain a list of all processes inside this container
-        ctr_procs: t.List[psutil.Process] = []
+        ctr_procs: list[psutil.Process] = []
         for pid in ctr_pids:
             proc = psutil.Process(pid)
             ctr_procs.append(proc)
@@ -139,13 +139,15 @@ class Shell:
 
         # read /proc/PID/status to find the namespace mapping
         for proc in ctr_procs:
-            fn_proc = f'/proc/{proc.pid}/status'
-            with open(fn_proc, 'r') as fh_proc:
-                lines = filter(lambda l: l.startswith('NSpid'),
-                               fh_proc.readlines())
+            fn_proc = Path(f"/proc/{proc.pid}/status")
+            with fn_proc.open() as fh_proc:
+                lines = filter(
+                    lambda line: line.startswith("NSpid"),
+                    fh_proc.readlines(),
+                )
                 for line in lines:
                     proc_host_pid, proc_local_pid = \
-                        [int(p) for p in line.strip().split('\t')[1:3]]
+                        (int(p) for p in line.strip().split("\t")[1:3])
                     if proc_local_pid == pid_local:
                         return proc_host_pid
 
@@ -154,22 +156,22 @@ class Shell:
     def _instrument(self,
                     command: str,
                     *,
-                    time_limit: t.Optional[int] = None,
-                    kill_after: int = 1
+                    time_limit: int | None = None,
+                    kill_after: int = 1,
                     ) -> str:
         q = quote_container
         logger.debug(f"instrumenting command: {command}")
-        command = f'{self.path} -c {q(command)}'
+        command = f"{self.path} -c {q(command)}"
         if time_limit:
-            command = (f'timeout --kill-after={kill_after} '
-                       f'--signal=SIGTERM {time_limit} {command}')
+            command = (f"timeout --kill-after={kill_after} "
+                       f"--signal=SIGTERM {time_limit} {command}")
         logger.debug(f"instrumented command: {command}")
         return command
 
     def send_signal(self, pid: int, sig: int) -> None:
         # FIXME run as root!
         logger.debug(f"sending signal {sig} to process {pid}")
-        cmd = f'kill -{sig} {pid}'
+        cmd = f"kill -{sig} {pid}"
         self.run(cmd)
 
     def environ(self, var: str) -> str:
@@ -189,13 +191,12 @@ class Shell:
         self,
         args: str,
         *,
-        cwd: str = '/',
-        time_limit: t.Optional[int] = None,
-        kill_after: int = 1,
-        environment: t.Optional[t.Mapping[str, str]] = None,
+        cwd: str = "/",
+        time_limit: int | None = None,  # noqa: ARG002
+        kill_after: int = 1,            # noqa: ARG002
+        environment: t.Mapping[str, str] | None = None,
     ) -> None:
-        """Executes a given commands, blocks until its completion, and checks
-        that the return code is zero.
+        """Executes a given commands, blocks until completion, and checks return code is zero.
 
         Raises
         ------
@@ -215,12 +216,12 @@ class Shell:
         args: str,
         *,
         stderr: bool = True,
-        cwd: str = '/',
-        encoding: str = 'utf-8',
+        cwd: str = "/",
+        encoding: str = "utf-8",
         text: Literal[False],
-        time_limit: t.Optional[int] = None,
+        time_limit: int | None = None,
         kill_after: int = 1,
-        environment: t.Optional[t.Mapping[str, str]] = None,
+        environment: t.Mapping[str, str] | None = None,
     ) -> bytes:
         ...
 
@@ -230,12 +231,12 @@ class Shell:
         args: str,
         *,
         stderr: bool = True,
-        cwd: str = '/',
-        encoding: str = 'utf-8',
+        cwd: str = "/",
+        encoding: str = "utf-8",
         text: Literal[True],
-        time_limit: t.Optional[int] = None,
+        time_limit: int | None = None,
         kill_after: int = 1,
-        environment: t.Optional[t.Mapping[str, str]] = None,
+        environment: t.Mapping[str, str] | None = None,
     ) -> str:
         ...
 
@@ -244,15 +245,14 @@ class Shell:
         args: str,
         *,
         stderr: bool = False,
-        cwd: str = '/',
-        encoding: str = 'utf-8',
+        cwd: str = "/",
+        encoding: str = "utf-8",
         text: bool = True,
-        time_limit: t.Optional[int] = None,
+        time_limit: int | None = None,
         kill_after: int = 1,
-        environment: t.Optional[t.Mapping[str, str]] = None,
-    ) -> t.Union[str, bytes]:
-        """Executes a given commands, blocks until its completion, and checks
-        that the return code is zero.
+        environment: t.Mapping[str, str] | None = None,
+    ) -> str | bytes:
+        """Executes a given command, blocks until completion, and checks return code is zero.
 
         Returns
         -------
@@ -283,14 +283,14 @@ class Shell:
         self,
         args: str,
         *,
-        encoding: str = 'utf-8',
-        cwd: str = '/',
+        encoding: str = "utf-8",
+        cwd: str = "/",
         text: bool = True,
         stdout: bool = True,
         stderr: bool = False,
-        time_limit: t.Optional[int] = None,
+        time_limit: int | None = None,
         kill_after: int = 1,
-        environment: t.Optional[t.Mapping[str, str]] = None,
+        environment: t.Mapping[str, str] | None = None,
     ) -> CompletedProcess:
         """Executes a given command and blocks until its completion.
 
@@ -352,11 +352,11 @@ class Shell:
 
         logger.debug(f"retcode: {retcode}")
 
-        output: t.Optional[t.Union[str, bytes]]
+        output: str | bytes | None
         if no_output:
             output = None
         elif text:
-            output = output_bin.decode(encoding).rstrip('\r\n')
+            output = output_bin.decode(encoding).rstrip("\r\n")
         else:
             output = output_bin
 
@@ -371,13 +371,13 @@ class Shell:
         self,
         args: str,
         *,
-        cwd: str = '/',
-        encoding: t.Optional[str] = 'utf-8',
+        cwd: str = "/",
+        encoding: str | None = "utf-8",
         stdout: bool = True,
         stderr: bool = False,
-        time_limit: t.Optional[int] = None,
+        time_limit: int | None = None,
         kill_after: int = 1,
-        environment: t.Optional[t.Mapping[str, str]] = None,
+        environment: t.Mapping[str, str] | None = None,
     ) -> Popen:
         docker_api = self.container.daemon.api
         if not environment:
@@ -393,14 +393,16 @@ class Shell:
                                                workdir=cwd,
                                                stdout=stdout,
                                                stderr=stderr)
-        exec_id = exec_response['Id']
+        exec_id = exec_response["Id"]
         exec_stream = docker_api.exec_start(exec_id,
                                             stream=True)
-        logger.debug(f'started Exec [{exec_id}] for Popen')
-        return Popen(args=args,
-                     cwd=cwd,
-                     container=self.container,
-                     docker_api=docker_api,
-                     exec_id=exec_id,
-                     encoding=encoding,
-                     stream=exec_stream)
+        logger.debug(f"started Exec [{exec_id}] for Popen")
+        return Popen(
+            args=args,
+            cwd=cwd,
+            container=self.container,
+            docker_api=docker_api,
+            exec_id=exec_id,
+            encoding=encoding,
+            stream=exec_stream,
+        )
