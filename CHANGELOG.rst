@@ -1,3 +1,9 @@
+v0.6.1 (2024-05-23)
+--------------------
+
+* silence stdout/stderr when copying files via `copy_to_host` and `copy_from_host`
+
+
 v0.6.0 (2024-05-20)
 -------------------
 

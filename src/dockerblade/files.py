@@ -7,6 +7,7 @@ import tempfile
 import typing
 from collections.abc import Iterator
 from pathlib import Path
+from subprocess import DEVNULL
 from typing import Literal, overload
 
 import attr
@@ -74,7 +75,13 @@ class FileSystem:
         cmd: str = (f"docker cp -L {path_host_escaped} "
                     f"{id_container}:{path_container_escaped}")
         try:
-            subprocess.check_call(cmd, shell=True)
+            subprocess.check_call(
+                cmd,
+                shell=True,
+                stdin=DEVNULL,
+                stdout=DEVNULL,
+                stderr=DEVNULL,
+            )
         except subprocess.CalledProcessError as error:
             path_container_parent: str = os.path.dirname(path_container)
             if not self.isdir(path_container_parent):
@@ -129,7 +136,13 @@ class FileSystem:
                     f"{id_container}:{path_container_escaped} "
                     f"{path_host_escaped}")
         try:
-            subprocess.check_call(cmd, shell=True)
+            subprocess.check_call(
+                cmd,
+                shell=True,
+                stdin=DEVNULL,
+                stdout=DEVNULL,
+                stderr=DEVNULL,
+            )
         except subprocess.CalledProcessError as error:
             if not self.exists(path_container):
                 raise exc.ContainerFileNotFound(
@@ -206,7 +219,10 @@ class FileSystem:
                    f"test -d {escaped_directory} || exit 51 && "
                    f"rmdir {escaped_directory}")
         try:
-            self._shell.check_output(command, text=True)
+            self._shell.check_output(
+                command,
+                text=True,
+            )
         except exc.CalledProcessError as error:
             if error.returncode == EXIT_CODE_FILE_NOT_FOUND:
                 raise exc.ContainerFileNotFound(
