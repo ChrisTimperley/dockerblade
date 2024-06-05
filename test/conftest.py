@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+import os
 from contextlib import ExitStack
 
 import dockerblade
@@ -8,7 +9,8 @@ import dockerblade
 
 @pytest.fixture(scope='session')
 def daemon():
-    with dockerblade.DockerDaemon() as daemon:
+    url: str | None = os.environ.get("DOCKER_HOST", None)
+    with dockerblade.DockerDaemon(url=url) as daemon:
         yield daemon
 
 

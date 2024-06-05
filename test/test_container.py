@@ -8,7 +8,6 @@ import dockerblade
 
 def test_persist(daemon):
     with ExitStack() as exit_stack:
-        daemon = dockerblade.DockerDaemon()
         exit_stack.push(daemon)
 
         container = daemon.provision('alpine:3.10')
