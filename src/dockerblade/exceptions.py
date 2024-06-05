@@ -1,5 +1,21 @@
+from __future__ import annotations
+
+__all__ = (
+    "DockerBladeException",
+    "UnexpectedError",
+    "EnvNotFoundError",
+    "CopyFailed",
+    "IsADirectoryError",
+    "DirectoryNotEmpty",
+    "IsNotADirectoryError",
+    "HostFileNotFound",
+    "ContainerFileNotFound",
+    "ContainerFileAlreadyExists",
+    "CalledProcessError",
+    "TimeoutExpired",
+)
+
 import subprocess as _subprocess
-import typing as _t
 
 import attr as _attr
 
@@ -12,7 +28,7 @@ class DockerBladeException(Exception):
 class UnexpectedError(DockerBladeException):
     """An unexpected error occurred during an operation."""
     description: str
-    error: _t.Optional["CalledProcessError"] = _attr.ib(default=None)
+    error: CalledProcessError | None = _attr.ib(default=None)
 
     def __str__(self) -> str:
         msg = f"An unexpected error occurred: {self.description}"

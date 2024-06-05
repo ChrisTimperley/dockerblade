@@ -1,4 +1,10 @@
-__all__ = ("Shell", "CompletedProcess", "CalledProcessError")
+from __future__ import annotations
+
+__all__ = (
+    "CalledProcessError",
+    "CompletedProcess",
+    "Shell",
+)
 
 import typing as t
 from pathlib import Path
@@ -77,7 +83,7 @@ class Shell:
     ContainerFileNotFound
         If a given source file is not found.
     """
-    container: "Container" = attr.ib()
+    container: Container = attr.ib()
     path: str = attr.ib()
     _sources: t.Sequence[str] = attr.ib(factory=tuple)
     _environment: t.Mapping[str, str] = attr.ib(factory=dict)

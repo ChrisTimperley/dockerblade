@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 __all__ = ("Stopwatch",)
 
+import typing as t
 import warnings
 from timeit import default_timer as timer
-from types import TracebackType
 
 import attr
+
+if t.TYPE_CHECKING:
+    from types import TracebackType
 
 
 @attr.s(slots=True, repr=False, str=False, eq=False, hash=False)
@@ -22,15 +27,16 @@ class Stopwatch:
     _paused: bool = attr.ib(default=True)
     _time_start: float = attr.ib(default=0.0)
 
-    def __enter__(self) -> "Stopwatch":
+    def __enter__(self) -> t.Self:
         self.start()
         return self
 
-    def __exit__(self,
-                 ex_type: type[BaseException] | None,
-                 ex_val: BaseException | None,
-                 ex_tb: TracebackType | None,
-                 ) -> None:
+    def __exit__(
+        self,
+        ex_type: type[BaseException] | None,
+        ex_val: BaseException | None,
+        ex_tb: TracebackType | None,
+    ) -> None:
         self.stop()
 
     def __repr__(self) -> str:

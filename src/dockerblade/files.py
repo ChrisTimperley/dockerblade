@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = ("FileSystem",)
 
 import contextlib
@@ -5,7 +7,6 @@ import os
 import subprocess
 import tempfile
 import typing
-from collections.abc import Iterator
 from pathlib import Path
 from subprocess import DEVNULL
 from typing import Literal, overload
@@ -13,12 +14,14 @@ from typing import Literal, overload
 import attr
 from loguru import logger
 
-from . import exceptions as exc
-from .util import quote_container, quote_host
+import dockerblade.exceptions as exc
+from dockerblade.util import quote_container, quote_host
 
 if typing.TYPE_CHECKING:
-    from .container import Container
-    from .shell import Shell
+    from collections.abc import Iterator
+
+    from dockerblade.container import Container
+    from dockerblade.shell import Shell
 
 _ON_WINDOWS = os.name == "nt"
 
@@ -36,8 +39,8 @@ class FileSystem:
     container: Container
         The container to which this filesystem belongs.
     """
-    container: "Container" = attr.ib()
-    _shell: "Shell" = attr.ib(repr=False, eq=False, hash=False)
+    container: Container = attr.ib()
+    _shell: Shell = attr.ib(repr=False, eq=False, hash=False)
 
     def copy_from_host(self, path_host: str, path_container: str) -> None:
         """Copies a given file or directory tree from the host to the container.

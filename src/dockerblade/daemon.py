@@ -1,14 +1,19 @@
+from __future__ import annotations
+
 __all__ = ("DockerDaemon",)
 
-from collections.abc import Mapping
-from types import TracebackType
-from typing import Any
+import typing as t
 
 import attr
 import docker
 from loguru import logger
 
-from .container import Container
+from dockerblade.container import Container
+
+if t.TYPE_CHECKING:
+    from collections.abc import Mapping
+    from types import TracebackType
+
 
 
 @attr.s(frozen=True)
@@ -27,7 +32,7 @@ class DockerDaemon:
         object.__setattr__(self, "api", api)
         logger.debug(f"created daemon connection: {self}")
 
-    def __enter__(self) -> "DockerDaemon":
+    def __enter__(self) -> t.Self:
         return self
 
     def __exit__(self,
@@ -51,18 +56,19 @@ class DockerDaemon:
         logger.debug(f"attached to container [{container}]")
         return container
 
-    def provision(self,
-                  image: str,
-                  command: str | None = None,
-                  *,
-                  entrypoint: str | None = None,
-                  environment: Mapping[str, str] | None = None,
-                  network_mode: str = "bridge",
-                  name: str | None = None,
-                  ports: Mapping[int, int] | None = None,
-                  user: str | None = None,
-                  volumes: Mapping[str, Any] | None = None,
-                  ) -> Container:
+    def provision(
+        self,
+        image: str,
+        command: str | None = None,
+        *,
+        entrypoint: str | None = None,
+        environment: Mapping[str, str] | None = None,
+        network_mode: str = "bridge",
+        name: str | None = None,
+        ports: Mapping[int, int] | None = None,
+        user: str | None = None,
+        volumes: Mapping[str, t.Any] | None = None,
+    ) -> Container:
         """Creates a Docker container from a given image.
 
         Arguments:

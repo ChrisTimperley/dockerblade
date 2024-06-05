@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dockerblade"
-version = "0.6.1"
+version = "0.6.2"
 description = "Interact with Docker containers via Python-like APIs"
 authors = ["Chris Timperley <ctimperley@cmu.edu>"]
 license = "Apache-2.0"
