@@ -8,6 +8,6 @@ test:
 	poetry run pytest
 
 install:
-	poetry install
+	poetry install --with dev
 
 check: lint test
