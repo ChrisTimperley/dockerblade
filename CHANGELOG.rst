@@ -1,4 +1,4 @@
-v0.6.2 (XXXX-XX-XX)
+v0.6.2 (2024-06-05)
 -------------------
 
 * added `__all__` to all submodules to improve discoverability
