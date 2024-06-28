@@ -2,10 +2,16 @@
 import pytest
 
 import os
-import shutil
 import tempfile
 
 from dockerblade import exceptions as exc
+
+
+def test_put(alpine_310):
+    files = alpine_310.filesystem()
+    files.put("/tmp/foo", "hello world")
+    assert files.isfile("/tmp/foo")
+    assert files.read("/tmp/foo") == "hello world"
 
 
 def test_write(alpine_310):

@@ -1,3 +1,10 @@
+v0.6.3 (XXXX-XX-XX)
+-------------------
+
+* added `put` and `put_archive` methods to `FileSystem` to allow users to
+  upload files and directories to the container.
+
+
 v0.6.2 (2024-06-05)
 -------------------
 

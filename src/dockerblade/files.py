@@ -3,8 +3,10 @@ from __future__ import annotations
 __all__ = ("FileSystem",)
 
 import contextlib
+import io
 import os
 import subprocess
+import tarfile
 import tempfile
 import typing
 from pathlib import Path
@@ -41,6 +43,36 @@ class FileSystem:
     """
     container: Container = attr.ib()
     _shell: Shell = attr.ib(repr=False, eq=False, hash=False)
+
+    def put_archive(
+        self,
+        data: bytes,
+        extract_to: str = "/",
+    ) -> None:
+        """Extracts a tar archive to the container."""
+        self.container._docker.put_archive(
+            extract_to,
+            data,
+        )
+
+    def put(
+        self,
+        path_container: str,
+        contents: str | bytes,
+    ) -> None:
+        """Writes a file to the container."""
+        if isinstance(contents, str):
+            contents = contents.encode("utf-8")
+
+        tar_stream = io.BytesIO()
+        with tarfile.open(fileobj=tar_stream, mode="w") as tar:
+            file_data = io.BytesIO(contents)
+            tarinfo = tarfile.TarInfo(name=path_container)
+            tarinfo.size = len(file_data.getvalue())
+            tar.addfile(tarinfo, file_data)
+        tar_stream.seek(0)
+
+        self.put_archive(tar_stream.getvalue(), extract_to="/")
 
     def copy_from_host(self, path_host: str, path_container: str) -> None:
         """Copies a given file or directory tree from the host to the container.
