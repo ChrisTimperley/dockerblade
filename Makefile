@@ -1,4 +1,4 @@
-.PHONY: check install test lint
+.PHONY: check install test lint publish
 
 lint:
 	poetry run ruff check src
@@ -9,5 +9,8 @@ test:
 
 install:
 	poetry install --with dev
+
+publish:
+	poetry publish --build
 
 check: lint test
