@@ -1,4 +1,4 @@
-v0.6.3 (XXXX-XX-XX)
+v0.6.3 (2024-07-01)
 -------------------
 
 * added `put` and `put_archive` methods to `FileSystem` to allow users to
