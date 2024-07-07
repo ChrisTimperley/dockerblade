@@ -1,3 +1,9 @@
+v0.6.4 (XXXX-XX-XX)
+-------------------
+
+* updated `write` method in `FileSystem` to no longer rely on `copy_from_host`
+
+
 v0.6.3 (2024-07-01)
 -------------------
 

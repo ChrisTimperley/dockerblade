@@ -284,18 +284,13 @@ class FileSystem:
         contents: Union[str, bytes]
             the text or binary contents of the file.
         """
-        mode = "wb" if isinstance(contents, bytes) else "w"
         directory = os.path.dirname(filename)
         if not self.isdir(directory):
-            raise exc.ContainerFileNotFound(path=directory,
-                                            container_id=self.container.id)
-
-        # write to a temporary file on the host and copy to container
-        with tempfile.TemporaryDirectory() as host_temp_dir:
-            temp_filename = os.path.join(host_temp_dir, "contents")
-            with open(temp_filename, mode) as fh:
-                fh.write(contents)
-            self.copy_from_host(temp_filename, filename)
+            raise exc.ContainerFileNotFound(
+                path=directory,
+                container_id=self.container.id,
+            )
+        self.put(filename, contents)
 
     @overload
     def read(self, filename: str) -> str:
@@ -639,11 +634,12 @@ class FileSystem:
 
             self._shell.check_call(cmd)
 
-    def mktemp(self,
-               suffix: str | None = None,
-               prefix: str | None = None,
-               dirname: str | None = None,
-               ) -> str:
+    def mktemp(
+        self,
+        suffix: str | None = None,
+        prefix: str | None = None,
+        dirname: str | None = None,
+    ) -> str:
         """Creates a temporary file.
 
         Inspired by :class:`tempfile.mktemp`.
@@ -686,11 +682,12 @@ class FileSystem:
         return filename
 
     @contextlib.contextmanager
-    def tempfile(self,
-                 suffix: str | None = None,
-                 prefix: str | None = None,
-                 dirname: str | None = None,
-                 ) -> Iterator[str]:
+    def tempfile(
+        self,
+        suffix: str | None = None,
+        prefix: str | None = None,
+        dirname: str | None = None,
+    ) -> Iterator[str]:
         """Creates a temporary file within a context.
 
         Upon exiting the context, the temporary file will be destroyed.
